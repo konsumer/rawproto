@@ -1,6 +1,6 @@
 {
   "name": "rawproto",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Guess structure of protobuf binary from raw data",
   "main": "index.js",
   "module": "src/index.js",
