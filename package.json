@@ -1,15 +1,9 @@
 {
   "name": "rawproto",
   "version": "0.1.0",
-  "module": "src/index.js",
-  "main": "index.js",
   "description": "Guess structure of protobuf binary from raw data",
-  "scripts": {
-    "test": "babel-node test/setup.js && babel-node test/test.js",
-    "prepublish": "babel src/index.js > index.js"
-  },
-  "author": "David Konsumer <konsumer@jetboystudio.com> (http://konsumer.js.org)",
-  "license": "MIT",
+  "main": "index.js",
+  "module": "src/index.js",
   "dependencies": {
     "protobufjs": "^6.8.0"
   },
@@ -18,16 +12,30 @@
     "babel-preset-env": "^1.6.0",
     "hexy": "^0.2.10"
   },
-  "babel": {
-    "presets": [
-      "env"
-    ]
+  "scripts": {
+    "test": "babel-node test/setup.js && babel-node test/test.js",
+    "prepublish": "babel src/index.js > index.js"
   },
-  "tags": [
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/konsumer/rawproto.git"
+  },
+  "keywords": [
     "protobuf",
     "decode",
     "reverse-engineer",
     "binary",
     "raw"
-  ]
+  ],
+  "author": "David Konsumer <konsumer@jetboystudio.com> (http://konsumer.js.org)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/konsumer/rawproto/issues"
+  },
+  "homepage": "https://github.com/konsumer/rawproto#readme",
+  "babel": {
+    "presets": [
+      "env"
+    ]
+  }
 }
