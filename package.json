@@ -3,7 +3,7 @@
   "version": "0.5.0",
   "module": "src/index.js",
   "main": "index.js",
-  "description": "Guess structure of protobuf binary from data",
+  "description": "Guess structure of protobuf binary from raw data",
   "scripts": {
     "test": "babel-node test/setup.js && babel-node test/test.js",
     "prepublish": "babel src/index.js > index.js"
@@ -23,5 +23,5 @@
       "env"
     ]
   },
-  "tags": ["protobuf", "decode", "reverse-engineer", "binary"]
+  "tags": ["protobuf", "decode", "reverse-engineer", "binary", "raw"]
 }
