@@ -15,7 +15,5 @@ import { readFileSync } from 'fs'
 import { getData } from 'rawproto'
 
 // binary protobuf message
-const info = getData(readFileSync('data.pb'))
-
-console.log(info)
+console.log( getData(readFileSync('data.pb')) )
 ```
