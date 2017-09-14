@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+message Test {
+  repeated int32 nums = 1;
+  int64 num = 2;
+  string str = 3;
+  repeated Child children = 4;
+}
+
+message Child {
+  int64 num = 1;
+  string str = 2;
+  repeated Child children = 3;
+}

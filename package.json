@@ -1,0 +1,27 @@
+{
+  "name": "rawproto",
+  "version": "0.5.0",
+  "module": "src/index.js",
+  "main": "index.js",
+  "description": "Guess structure of protobuf binary from data",
+  "scripts": {
+    "test": "babel-node test/setup.js && babel-node test/test.js",
+    "prepublish": "babel src/index.js > index.js"
+  },
+  "author": "David Konsumer <konsumer@jetboystudio.com> (http://konsumer.js.org)",
+  "license": "MIT",
+  "dependencies": {
+    "protobufjs": "^6.8.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.6.0",
+    "hexy": "^0.2.10"
+  },
+  "babel": {
+    "presets": [
+      "env"
+    ]
+  },
+  "tags": ["protobuf", "decode", "reverse-engineer", "binary"]
+}
