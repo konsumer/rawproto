@@ -22,7 +22,8 @@ export const getData = buffer => {
         break
       case 2: // string, bytes, sub-message
         const bytes = reader.bytes()
-        if (bytes[0] === 8) { // this isn't the right way to do this at all, I'm sure
+        // TODO: this isn't the right way to do this at all, I'm sure
+        if (bytes[0] === 8) {
           out.push({[id]: getData(bytes)})
         } else {
           out.push({[id]: bytes.toString()})
