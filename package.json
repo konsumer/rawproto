@@ -1,6 +1,6 @@
 {
   "name": "rawproto",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "module": "src/index.js",
   "main": "index.js",
   "description": "Guess structure of protobuf binary from raw data",
@@ -23,5 +23,11 @@
       "env"
     ]
   },
-  "tags": ["protobuf", "decode", "reverse-engineer", "binary", "raw"]
+  "tags": [
+    "protobuf",
+    "decode",
+    "reverse-engineer",
+    "binary",
+    "raw"
+  ]
 }
