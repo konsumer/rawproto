@@ -6,7 +6,7 @@ import { Reader } from 'protobufjs'
  * @param      {Buffer}   buffer  The proto in a binary buffer
  * @return     {object[]}         Info about the protobuf
  */
-export const getData = buffer => {
+export const getData = (buffer, depth = 0) => {
   const reader = Reader.create(buffer)
   const out = []
   while (reader.pos < reader.len) {
@@ -22,12 +22,29 @@ export const getData = buffer => {
         break
       case 2: // string, bytes, sub-message
         const bytes = reader.bytes()
-        // TODO: this isn't the right way to do this at all, I'm sure
-        if (bytes[0] === 8) {
-          out.push({[id]: getData(bytes)})
-        } else {
-          out.push({[id]: bytes.toString()})
+        try {
+          const innerMessage = getData(bytes, depth + 1)
+          out.push({[id]: innerMessage})
+        } catch (e) {
+          // search buffer for extended chars
+          let hasExtended = false
+          bytes.forEach(b => {
+            if (b < 32 || b > 126) {
+              hasExtended = true
+            }
+          })
+          if (hasExtended) {
+            out.push({[id]: bytes})
+          } else {
+            out.push({[id]: bytes.toString()})
+          }
         }
+        // // TODO: this isn't the right way to do this at all, I'm sure
+        // if (bytes[0] === 8) {
+        //   out.push({[id]: getData(bytes, depth + 1)})
+        // } else {
+        //   out.push({[id]: bytes.toString()})
+        // }
         break
       // IGNORE start_group
       // IGNORE end_group
