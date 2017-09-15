@@ -55,7 +55,7 @@ Install with `npm i -g rawproto`
 Use it like this:
 
 ```
-car myfile.pb | rawproto
+cat myfile.pb | rawproto
 ```
 
 
