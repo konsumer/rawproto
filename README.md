@@ -46,6 +46,18 @@ fs.writeFileSync('data.proto', rawproto.getProto(buffer) )
 
 ```
 
+## cli
+
+You can also use rawproto to parse binary on the command-line!
+
+Install with `npm i -g rawproto`
+
+Use it like this:
+
+```
+car myfile.pb | rawproto
+```
+
 
 ## limitations
 

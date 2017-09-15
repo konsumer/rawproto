@@ -4,6 +4,9 @@
   "description": "Guess structure of protobuf binary from raw data",
   "main": "index.js",
   "module": "src/index.js",
+  "bin": {
+    "rawproto": "./cli.js"
+  }
   "dependencies": {
     "protobufjs": "^6.8.0"
   },
