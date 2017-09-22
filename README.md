@@ -6,6 +6,7 @@ Very similar to `protoc --decode_raw`, but for javascript.
 
 You can use this to reverse-engineer a protobuf protocol, based on a binary protobuf string.
 
+See some example output (from the demo message in this repo) [here](https://gist.github.com/konsumer/3647d466b497e6950b12291e47f11eeb).
 
 ## installation
 
