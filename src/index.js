@@ -57,6 +57,7 @@ export const getData = buffer => {
   return out
 }
 
+// turn a message into a proto-representation
 const handleMessage = (msg, m = 'Root', level = 1) => {
   const seen = []
   const repeated = []

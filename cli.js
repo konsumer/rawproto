@@ -2,11 +2,13 @@
 
 var rawproto = require('./index.js')
 
-process.stdin.setEncoding('binary')
-
-process.stdin.on('readable', function() {
-  var chunk = process.stdin.read()
-  if (chunk !== null) {
-    console.log(rawproto.getProto(Buffer.from(chunk)))
-  }
+process.stdin.on('readable', function () {
+  var body = []
+  process.stdin
+    .on('data', function (chunk) {
+      body.push(Buffer.from(chunk))
+    })
+    .on('end', function () {
+      console.log(rawproto.getProto(Buffer.concat(body), null, 2))
+    })
 })
