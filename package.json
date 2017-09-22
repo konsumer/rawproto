@@ -8,7 +8,8 @@
     "rawproto": "./cli.js"
   },
   "dependencies": {
-    "protobufjs": "^6.8.0"
+    "protobufjs": "^6.8.0",
+    "yargs": "^9.0.1"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",

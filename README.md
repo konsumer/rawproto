@@ -59,6 +59,31 @@ Use it like this:
 cat myfile.pb | rawproto
 ```
 
+You can also use `-j` or `--json` to get JSON output instead of proto definition.
+
+```
+cat myfile.pb | rawproto -j
+```
+
+## http
+
+I noticed that various request libraries convert binary buffers into text, and this can cause issues. If you build your buffer manually, it seems to work ok:
+
+```js
+import get from 'https'
+import { getProto } from 'rawproto'
+
+get(url, request => {
+  if (response.statusCode < 200 || response.statusCode > 299) {
+    throw new Error('Failed to load page, status code: ' + response.statusCode)
+  }
+  const body = []
+  request.on('error', (err) => throw err)
+  response.on('data', (chunk) => body.push(chunk))
+  response.on('end', () => console.log(getProto(Buffer.concat(body))))
+})
+```
+
 
 ## limitations
 
