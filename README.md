@@ -100,7 +100,7 @@ Examples:
 
 ## http
 
-I noticed that various HTTP request libraries convert binary buffers into wrong-encoded text, and this can cause issues. If you build your buffer manually, it seems to work ok:
+I noticed that various HTTP request libraries convert binary buffers into wrong-encoded text, and this can cause issues. If you build your buffer manually with `Buffer.concat`, it seems to work ok:
 
 ```js
 import get from 'https'
