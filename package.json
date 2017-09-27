@@ -15,10 +15,11 @@
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.6.0",
-    "hexy": "^0.2.10"
+    "hexy": "^0.2.10",
+    "jest": "^21.2.0"
   },
   "scripts": {
-    "test": "babel-node test/setup.js && babel-node test/test.js",
+    "test": "jest",
     "prepublish": "babel src/index.js > index.js"
   },
   "repository": {
