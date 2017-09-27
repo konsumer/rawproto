@@ -103,18 +103,28 @@ Examples:
 I noticed that various HTTP request libraries convert binary buffers into wrong-encoded text, and this can cause issues. If you build your buffer manually with `Buffer.concat`, it seems to work ok:
 
 ```js
-import { get } from 'https'
+import http from 'http'
+import https from 'https'
 import { getProto } from 'rawproto'
 
-get(url, request => {
-  if (response.statusCode < 200 || response.statusCode > 299) {
-    throw new Error('Failed to load page, status code: ' + response.statusCode)
-  }
-  const body = []
-  request.on('error', (err) => throw err)
-  response.on('data', (chunk) => body.push(chunk))
-  response.on('end', () => console.log(getProto(Buffer.concat(body))))
+const getRaw = url => new Promise((resolve, reject) => {
+  const get = url.substr(0,5) === 'https' ? https.get : http.get
+  get(url, response => {
+    if (response.statusCode < 200 || response.statusCode > 299) {
+      return reject(new Error('Failed to load page, status code: ' + response.statusCode))
+    }
+    const body = []
+    response.on('error', (err) => reject(err))
+    response.on('data', (chunk) => body.push(chunk))
+    response.on('end', () => resolve(getProto(Buffer.concat(body))))
+  })
 })
+
+// use like this:
+getRaw(YOUR_URL)
+  .then(p => {
+    // do stuff with p
+  })
 ```
 
 
