@@ -8,6 +8,7 @@
     "rawproto": "./cli.js"
   },
   "dependencies": {
+    "lodash": "^4.17.4",
     "protobufjs": "^6.8.0",
     "yargs": "^9.0.1"
   },

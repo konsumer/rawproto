@@ -1,4 +1,5 @@
-import { Reader } from 'protobufjs'
+import { load, Reader, Type} from 'protobufjs'
+import { uniq } from 'lodash'
 
 // indent by count
 const indent = count => Array(count).join('  ')
@@ -93,6 +94,134 @@ const handleMessage = (msg, m = 'Root', level = 1) => {
   })
 
   return `${indent(level)}Message${m} {\n${lines.join('\n')}\n${indent(level)}}`
+}
+
+/**
+ * Analyze ways to parse protobuf given .proto files with possible messages
+ *
+ * @param      {Buffer}   buffer       The proto in a binary buffer
+ * @param      {String[]} protofiles   The protofile(s) to look for possible matching messages
+ * @return     {object[]}              Info about the protobuf
+ */
+export const analyzeData = (buffer, protofiles, cb) => {
+  const backwardsCompatibilityConfidence = 0.9
+  // get all messages in protofiles (from all files, all nested, and imports)
+  load(protofiles, (err, parsedProtofiles) => {
+    if (err) throw err
+    // recursively get all nested types
+    const getNested = (node) => {
+      if (!node.nested) return []
+      const nestedNodes = Object.values(node.nested)
+      return nestedNodes.concat(...nestedNodes.map(getNested))
+    }
+    const allTypes = getNested(parsedProtofiles)
+    // get wiretypes
+    allTypes.map(type => {
+      Object.values(type.fields).forEach(field => {
+        switch (field.type) {
+          case 'int32':
+          case 'int64':
+          case 'uint32':
+          case 'uint64':
+          case 'sint32':
+          case 'sint64':
+          case 'bool':
+          case 'enum':
+            // Varint (or Length-delimited if packed repeated)
+            field.wiretype = field.repeated && field.packed ? 2 : 0
+            break
+          case 'fixed64':
+          case 'sfixed64':
+          case 'double':
+            // 64-bit (or Length-delimited if packed repeated)
+            field.wiretype = field.repeated && field.packed ? 2 : 1
+            break
+          case 'fixed32':
+          case 'sfixed32':
+          case 'float':
+            // 32-bit (or Length-delimited if packed repeated)
+            field.wiretype = field.repeated && field.packed ? 2 : 5
+            break
+          default:
+          // case 'string':
+          // case 'bytes':
+          // case 'embedded message':
+            field.wiretype = 2 // Length-delimited
+        }
+      })
+    })
+    debugger
+    console.dir(allTypes.map(({name, fields}) => {
+      fields = Object.values(fields).map(({name, id, type, repeated, wiretype}) => ({name, id, type, repeated, wiretype}))
+      return {name, fields}
+    }), {depth: 100})
+
+    // parse buffer raw
+    const message = {fields: []}
+    const reader = Reader.create(buffer)
+    while (reader.pos < reader.len) {
+      const tag = reader.uint64()
+      const id = tag >>> 3
+      const wiretype = tag & 7
+      const field = {
+        id,
+        wiretype
+      }
+      switch (wiretype) {
+        case 0: // int32, int64, uint32, bool, enum, etc
+          field.data = reader.uint64()
+          break
+        case 1: // fixed64, sfixed64, double
+          field.data = reader.fixed64()
+          break
+        case 2: // string, bytes, sub-message
+          field.data = reader.bytes()
+          break
+        // IGNORE start_group
+        // IGNORE end_group
+        case 5: // fixed32, sfixed32, float
+          field.data = reader.fixed32()
+          break
+        default: reader.skipType(wiretype)
+      }
+      message.fields.push(field)
+    }
+
+    console.log(message)
+
+    // compare each parsed message keys and wiretypes to known messages with confidence rating
+    const possibleTypes = allTypes.map(type => {
+      // get number of matching id-wiretype pairs between message and definition
+      const matchingFields = Object.values(type.fields).filter(typeField => (
+        message.fields.find(messageField => messageField.id === typeField.id && messageField.wiretype === typeField.wiretype)
+      )).length
+
+      const fieldsDefinitionTotal = Object.values(type.fields).length
+      const fieldsMessageTotal = uniq(message.fields.map(x => x.id)).length
+
+      // for every id in message the wiretype for that id matches in definition
+      const backwardsCompatible = message.fields.every(messageField => (
+        Object.values(type.fields).find(typeField => typeField.id === messageField.id).wiretype === messageField.wiretype
+      ))
+
+      let absoluteConfidence = matchingFields / (fieldsMessageTotal + fieldsDefinitionTotal - matchingFields)
+
+      // confidence will take a hit if the message is not backwards compatible as expected
+      if (!backwardsCompatible) {
+        absoluteConfidence *= (1 - backwardsCompatibilityConfidence)
+      }
+
+      return {
+        type: type.name,
+        absoluteConfidence
+      }
+    })
+
+    console.log(possibleTypes)
+  })
+
+  // take best matches above threshold
+  // report
 }
 
 /**
