@@ -1,5 +1,5 @@
 import { load, Reader, Type } from 'protobufjs'
-import { uniq } from 'lodash'
+import { uniqBy } from 'lodash'
 
 // indent by count
 const indent = count => Array(count).join('  ')
@@ -104,126 +104,149 @@ const handleMessage = (msg, m = 'Root', level = 1) => {
  * @return     {object[]}              Info about the protobuf
  */
 export const analyzeData = (buffer, protofiles) => {
-  const backwardsCompatibilityConfidence = 0.9
   // get all messages in protofiles (from all files, all nested, and imports)
-  return load(protofiles).then(parsedProtofiles => {
+  // TODO: this needs to be tested with multiple protofiles
+  return load(protofiles).then(parsedProtofile => {
     // recursively get all nested types
     const getNested = (node) => {
       if (!node.nested) return []
       const nestedNodes = Object.values(node.nested)
       return nestedNodes.concat(...nestedNodes.map(getNested))
     }
-    const allTypes = getNested(parsedProtofiles)
-    // get wiretypes
-    allTypes.map(type => {
+    const allTypes = getNested(parsedProtofile)
+
+    // get wiretype and add to defintions
+    allTypes.forEach(type => {
       Object.values(type.fields).forEach(field => {
         switch (field.type) {
-          case 'int32':
-          case 'int64':
-          case 'uint32':
-          case 'uint64':
-          case 'sint32':
-          case 'sint64':
-          case 'bool':
-          case 'enum':
+          case 'int32': case 'int64':
+          case 'uint32': case 'uint64':
+          case 'sint32': case 'sint64':
+          case 'enum': case 'bool':
             // Varint (or Length-delimited if packed repeated)
             field.wiretype = field.repeated && field.packed ? 2 : 0
             break
-          case 'fixed64':
-          case 'sfixed64':
-          case 'double':
+          case 'double': case 'fixed64': case 'sfixed64':
             // 64-bit (or Length-delimited if packed repeated)
             field.wiretype = field.repeated && field.packed ? 2 : 1
             break
-          case 'fixed32':
-          case 'sfixed32':
-          case 'float':
+          case 'float': case 'fixed32': case 'sfixed32':
             // 32-bit (or Length-delimited if packed repeated)
             field.wiretype = field.repeated && field.packed ? 2 : 5
             break
+          case 'bytes': case 'string':
+            // Length-delimited
+            field.wiretype = 2
+            break
           default:
-          // case 'string':
-          // case 'bytes':
-          // case 'embedded message':
-            field.wiretype = 2 // Length-delimited
+            // embedded message
+            // Length-delimited
+            field.wiretype = 2
+            field.isSubMessage = true
         }
       })
     })
-    // debugger
-    // console.dir(allTypes.map(({name, fields}) => {
-    //   fields = Object.values(fields).map(({name, id, type, repeated, wiretype}) => ({name, id, type, repeated, wiretype}))
-    //   return {name, fields}
-    // }), {depth: 100})
 
-    // parse buffer raw
-    const message = {fields: []}
-    const reader = Reader.create(buffer)
-    while (reader.pos < reader.len) {
-      const tag = reader.uint64()
-      const id = tag >>> 3
-      const wiretype = tag & 7
-      const field = {
-        id,
-        wiretype
-      }
-      switch (wiretype) {
-        case 0: // int32, int64, uint32, bool, enum, etc
-          field.data = reader.uint64()
-          break
-        case 1: // fixed64, sfixed64, double
-          field.data = reader.fixed64()
-          break
-        case 2: // string, bytes, sub-message
-          field.data = reader.bytes()
-          break
-        // IGNORE start_group
-        // IGNORE end_group
-        case 5: // fixed32, sfixed32, float
-          field.data = reader.fixed32()
-          break
-        default: reader.skipType(wiretype)
-      }
-      message.fields.push(field)
-    }
-
-    // console.log(message)
-
-    // compare each parsed message keys and wiretypes to known messages with confidence rating
-    let possibleValues = allTypes.map(type => {
+    // parse message raw to get id-wiretype pairs
+    const message = parseWiretypes(buffer)
+    // compare each parsed message keys and wiretypes to known messages
+    return allTypes.map(type => {
       // get number of matching id-wiretype pairs between message and definition
-      const matchingFields = Object.values(type.fields).filter(typeField => (
-        message.fields.find(messageField => messageField.id === typeField.id && messageField.wiretype === typeField.wiretype)
-      )).length
-
-      const fieldsDefinitionTotal = Object.values(type.fields).length
-      const fieldsMessageTotal = uniq(message.fields.map(x => x.id)).length
-
-      // for every id in message the wiretype for that id matches in definition
-      const backwardsCompatible = message.fields.every(messageField => (
-        Object.values(type.fields).find(typeField => typeField.id === messageField.id).wiretype === messageField.wiretype
-      ))
-
-      let confidence = matchingFields / (fieldsMessageTotal + fieldsDefinitionTotal - matchingFields)
-
-      // confidence will take a hit if the message is not backwards compatible as expected
-      if (!backwardsCompatible) {
-        confidence *= (1 - backwardsCompatibilityConfidence)
-      }
+      const comparison = compareMessageType(message, type, parsedProtofile)
 
       return {
         as: type.name,
-        confidence
+        matchingFields: comparison.matchingFields,
+        incompatibilites: comparison.incompatibilites
       }
-    })
-
-    // console.log(possibleValues)
-
-    possibleValues = possibleValues.sort((a, b) => b.confidence - a.confidence)
-
-    return {possibleValues}
+    }).sort((a, b) => b.matchingFields - a.matchingFields)
   })
-  // take best matches above threshold
-  // report
+}
+
+/**
+ * Parses protobuf for raw data and wiretype info
+ *
+ * @param      {Buffer}  buffer  The protobuf
+ * @return     {Object}  Parsed message with wiretype info
+ */
+const parseWiretypes = buffer => {
+  const message = {fields: []}
+  const reader = Reader.create(buffer)
+  while (reader.pos < reader.len) {
+    const tag = reader.uint64()
+    const id = tag >>> 3
+    const wiretype = tag & 7
+    const field = {
+      id,
+      wiretype
+    }
+    switch (wiretype) {
+      case 0: // int32, int64, uint32, bool, enum, etc
+        field.data = reader.uint64()
+        break
+      case 1: // fixed64, sfixed64, double
+        field.data = reader.fixed64()
+        break
+      case 5: // fixed32, sfixed32, float
+        field.data = reader.fixed32()
+        break
+      // IGNORE start_group
+      // IGNORE end_group
+      case 2: // string, bytes, sub-message
+        field.data = reader.bytes()
+        try {
+          field.subMessage = parseWiretypes(field.data)
+        } catch (err) {
+          // ignore if not parseable as subMessage
+        }
+        break
+      default: reader.skipType(wiretype)
+    }
+    message.fields.push(field)
+  }
+  return message
+}
+
+/**
+ * Recursively compare a parsed message from parseWiretypes
+ * with a known type definition with added wiretype info
+ *
+ * @param      {Object}             message          Protobuf parsed with parseWiretypes
+ * @param      {<type>}             type             The parsed protobuf defintion with added wiretype info
+ * @param      {<type>}             parsedProtofile  The parsed protofile
+ * @return     {Array}    Array of possble interpretation of the message with the known types
+ *                        from the parsedProtofile
+ */
+const compareMessageType = (message, type, parsedProtofile) => {
+  const comparison = uniqBy(message.fields, f => f.id).reduce((totals, messageField) => {
+    const typeField = Object.values(type.fields).find(typeField => typeField.id === messageField.id)
+    if (typeField) {
+      if (typeField.wiretype !== messageField.wiretype) {
+        totals.incompatibilites++
+        return totals
+      }
+      // if typefield is sub message (isSubMessage == true)
+      if (typeField.isSubMessage) {
+        if (!messageField.subMessage) {
+          totals.incompatibilites++
+          return totals
+        }
+        const subType = parsedProtofile.lookup(typeField.type)
+        if (subType) {
+          const comparison = compareMessageType(messageField.subMessage, subType, parsedProtofile)
+          totals.matchingFields += comparison.matchingFields
+          totals.incompatibilites += comparison.incompatibilites
+        }
+      } else {
+        totals.matchingFields++
+      }
+    } // ignore if no match
+    return totals
+  }, {
+    matchingFields: 0,
+    incompatibilites: 0
+  })
+  return comparison
 }
 
 /**

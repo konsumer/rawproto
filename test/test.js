@@ -42,11 +42,12 @@ describe('getProto', () => {
   })
 })
 
-describe('raw proto analysis', () => {
-  it('guesses from set of possible proto definitions', () => {
+describe('analyzeData', () => {
+  it('compares with set of possible proto definitions', () => {
     // give it the original .proto but don't tell it which message it's decoding
     return analyzeData(TestPb, join(__dirname, 'demo.proto')).then(analysis => {
-      expect(analysis.possibleValues[0].as).toEqual('Test')
+      // console.log(analysis)
+      expect(analysis[0].as).toEqual('Test')
     })
   })
 })
