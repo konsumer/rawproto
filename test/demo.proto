@@ -12,3 +12,13 @@ message Child {
   string str = 2;
   repeated Child children = 3;
 }
+
+message Test1 {
+  int32 num = 1;
+  string str = 3;
+}
+
+message Test2 {
+  int64 num = 1;
+  string str = 2;
+}

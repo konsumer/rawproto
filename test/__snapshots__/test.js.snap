@@ -1,5 +1,102 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`getData parses raw protobuf structure 1`] = `
+Array [
+  Object {
+    "1": Object {
+      "data": Array [
+        1,
+        2,
+        3,
+        4,
+        5,
+      ],
+      "type": "Buffer",
+    },
+  },
+  Object {
+    "2": 1,
+  },
+  Object {
+    "3": "hello",
+  },
+  Object {
+    "4": Array [
+      Object {
+        "1": 1,
+      },
+      Object {
+        "2": "cool",
+      },
+      Object {
+        "3": Array [
+          Object {
+            "1": 1,
+          },
+        ],
+      },
+    ],
+  },
+  Object {
+    "4": Array [
+      Object {
+        "1": 2,
+      },
+      Object {
+        "2": "awesome",
+      },
+      Object {
+        "3": Array [
+          Object {
+            "1": 2,
+          },
+        ],
+      },
+    ],
+  },
+  Object {
+    "4": Array [
+      Object {
+        "1": 3,
+      },
+      Object {
+        "2": "neat",
+      },
+      Object {
+        "3": Array [
+          Object {
+            "1": 3,
+          },
+        ],
+      },
+    ],
+  },
+]
+`;
+
+exports[`getProto generates example proto definition from raw proto 1`] = `
+"syntax = \\"proto3\\";
+
+MessageRoot {
+  string field1 = 1; // could be a repeated-value, string, buffer, or malformed sub-message
+  int32 field2 = 2; // could be a int32, int64, uint32, bool, enum, etc, or even a float of some kind
+  string field3 = 3; // could be a repeated-value, string, buffer, or malformed sub-message
+
+  Message4 {
+    int32 field1 = 1; // could be a int32, int64, uint32, bool, enum, etc, or even a float of some kind
+    string field2 = 2; // could be a repeated-value, string, buffer, or malformed sub-message
+
+    Message3 {
+      int32 field1 = 1; // could be a int32, int64, uint32, bool, enum, etc, or even a float of some kind
+    }
+    
+    Message3 subMessage3 = 3;
+  }
+  
+  repeated Message4 subMessage4 = 4;
+}"
+`;
+
 exports[`raw parsing getData parses raw protobuf structure 1`] = `
 Array [
   Object {

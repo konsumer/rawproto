@@ -1,4 +1,4 @@
-import { load, Reader, Type} from 'protobufjs'
+import { load, Reader, Type } from 'protobufjs'
 import { uniq } from 'lodash'
 
 // indent by count
@@ -103,11 +103,10 @@ const handleMessage = (msg, m = 'Root', level = 1) => {
  * @param      {String[]} protofiles   The protofile(s) to look for possible matching messages
  * @return     {object[]}              Info about the protobuf
  */
-export const analyzeData = (buffer, protofiles, cb) => {
+export const analyzeData = (buffer, protofiles) => {
   const backwardsCompatibilityConfidence = 0.9
   // get all messages in protofiles (from all files, all nested, and imports)
-  load(protofiles, (err, parsedProtofiles) => {
-    if (err) throw err
+  return load(protofiles).then(parsedProtofiles => {
     // recursively get all nested types
     const getNested = (node) => {
       if (!node.nested) return []
@@ -150,11 +149,11 @@ export const analyzeData = (buffer, protofiles, cb) => {
         }
       })
     })
-    debugger
-    console.dir(allTypes.map(({name, fields}) => {
-      fields = Object.values(fields).map(({name, id, type, repeated, wiretype}) => ({name, id, type, repeated, wiretype}))
-      return {name, fields}
-    }), {depth: 100})
+    // debugger
+    // console.dir(allTypes.map(({name, fields}) => {
+    //   fields = Object.values(fields).map(({name, id, type, repeated, wiretype}) => ({name, id, type, repeated, wiretype}))
+    //   return {name, fields}
+    // }), {depth: 100})
 
     // parse buffer raw
     const message = {fields: []}
@@ -187,10 +186,10 @@ export const analyzeData = (buffer, protofiles, cb) => {
       message.fields.push(field)
     }
 
-    console.log(message)
+    // console.log(message)
 
     // compare each parsed message keys and wiretypes to known messages with confidence rating
-    const possibleTypes = allTypes.map(type => {
+    let possibleValues = allTypes.map(type => {
       // get number of matching id-wiretype pairs between message and definition
       const matchingFields = Object.values(type.fields).filter(typeField => (
         message.fields.find(messageField => messageField.id === typeField.id && messageField.wiretype === typeField.wiretype)
@@ -204,22 +203,25 @@ export const analyzeData = (buffer, protofiles, cb) => {
         Object.values(type.fields).find(typeField => typeField.id === messageField.id).wiretype === messageField.wiretype
       ))
 
-      let absoluteConfidence = matchingFields / (fieldsMessageTotal + fieldsDefinitionTotal - matchingFields)
+      let confidence = matchingFields / (fieldsMessageTotal + fieldsDefinitionTotal - matchingFields)
 
       // confidence will take a hit if the message is not backwards compatible as expected
       if (!backwardsCompatible) {
-        absoluteConfidence *= (1 - backwardsCompatibilityConfidence)
+        confidence *= (1 - backwardsCompatibilityConfidence)
       }
 
       return {
-        type: type.name,
-        absoluteConfidence
+        as: type.name,
+        confidence
       }
     })
 
-    console.log(possibleTypes)
-  })
+    // console.log(possibleValues)
 
+    possibleValues = possibleValues.sort((a, b) => b.confidence - a.confidence)
+
+    return {possibleValues}
+  })
   // take best matches above threshold
   // report
 }
