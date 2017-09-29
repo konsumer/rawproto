@@ -48,6 +48,7 @@ describe('analyzeData', () => {
     return analyzeData(TestPb, join(__dirname, 'demo.proto')).then(analysis => {
       // console.log(analysis)
       expect(analysis[0].as).toEqual('Test')
+      expect(analysis[0].matchingFields).toEqual(6)
     })
   })
 })
