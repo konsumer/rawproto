@@ -140,3 +140,4 @@ You should definitely tune the outputted proto file to how you think your data i
 * Streaming data-parser for large input
 * Collection analysis: better type-guessing with more messages
 * `getTypes` that doesn't mess with JS data, and just gives possible types of every field
+* partial-parsing like `protoc --decode`. It basically tries to decode, but leaves unknown fields raw.
