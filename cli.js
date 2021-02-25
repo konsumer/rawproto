@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var rawproto = require('./index.js')
+var rawproto = require('./dist/rawproto.js')
 var yargs = require('yargs')
 var pkg = require('./package.json')
 
