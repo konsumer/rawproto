@@ -8,12 +8,14 @@
     "rawproto": "./cli.js"
   },
   "dependencies": {
-    "protobufjs": "^6.8.0",
-    "yargs": "^9.0.1"
+    "protobufjs": "^6.10.2",
+    "yargs": "^16.2.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-preset-env": "^1.6.0",
+    "@babel/cli": "^7.13.0",
+    "@babel/core": "^7.13.8",
+    "@babel/node": "^7.13.10",
+    "@babel/preset-env": "^7.13.9",
     "hexy": "^0.2.10"
   },
   "scripts": {
@@ -39,7 +41,7 @@
   "homepage": "https://github.com/konsumer/rawproto#readme",
   "babel": {
     "presets": [
-      "env"
+      "@babel/preset-env"
     ]
   }
 }
