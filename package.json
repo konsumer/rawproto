@@ -13,6 +13,8 @@
   },
   "devDependencies": {
     "@babel/cli": "^7.13.0",
+    "@babel/core": "^7.13.8",
+    "@babel/node": "^7.13.10",
     "@babel/preset-env": "^7.13.9",
     "hexy": "^0.2.10"
   },
@@ -39,7 +41,7 @@
   "homepage": "https://github.com/konsumer/rawproto#readme",
   "babel": {
     "presets": [
-      "env"
+      "@babel/preset-env"
     ]
   }
 }
