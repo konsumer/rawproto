@@ -64,38 +64,42 @@ console.log( rawproto.getData(buffer, 'binary') )
 
 You can also use rawproto to parse binary on the command-line!
 
-Install with `npm i -g rawproto`
+Install with `npm i -g rawproto` or use it without installation with `npx rawproto`.
 
 Use it like this:
 
 ```
-cat myfile.pb | rawproto
+cat myfile.pb | rawproto parse
 ```
 
 or
 
 ```
-rawproto < myfile.pb
+rawproto parse < myfile.pb
 ```
 
 ```
-Usage: rawproto [options]
+Usage: rawproto <COMMAND>
+
+Commands:
+  rawproto guess  Guess the proto definition
+  rawproto parse  Raw-parse the binary protobuf
 
 Options:
-  --version         Show version number                                [boolean]
-  --json, -j        Output JSON instead of proto definition     [default: false]
-  -s, --stringMode  How should strings be handled? "auto" detects if it's binary
-                    based on characters, "string" is always a JS string, and
-                    "binary" is always a buffer.
-                         [choices: "auto", "string", "binary"] [default: "auto"]
-  -h, --help        Show help                                          [boolean]
+  --version  Show version number                                       [boolean]
+  --help     Show help                                                 [boolean]
+```
 
-Examples:
-  rawproto < myfile.pb               Get guessed proto3 definition from binary
-                                     protobuf
-  rawproto -j < myfile.pb            Get JSON represenation of binary protobuf
-  rawproto -j -s binary < myfile.pb  Get JSON represenation of binary protobuf,
-                                     assume all strings are binary buffers
+so to putput a raw-json parse:
+
+```
+npx rawproto parse < ~/Downloads/details.pb
+```
+
+or guess the proto-structure:
+
+```
+npx rawproto guess < ~/Downloads/details.pb
 ```
 
 ## http
