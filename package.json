@@ -2,25 +2,26 @@
   "name": "rawproto",
   "version": "0.6.2",
   "description": "Guess structure of protobuf binary from raw data",
-  "main": "index.js",
-  "module": "src/index.js",
+  "type": "module",
+  "source": "index.js",
+  "exports": "dist/rawproto.modern.js",
+  "main": "dist/rawproto.cjs",
+  "module": "dist/rawproto.module.js",
+  "unpkg": "dist/rawproto.umd.js",
   "bin": {
-    "rawproto": "./cli.js"
+    "rawproto": "./cli.cjs"
   },
   "dependencies": {
     "protobufjs": "^6.10.2",
     "yargs": "^16.2.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.13.0",
-    "@babel/core": "^7.13.8",
-    "@babel/node": "^7.13.10",
-    "@babel/preset-env": "^7.13.9",
     "hexy": "^0.2.10"
   },
   "scripts": {
-    "test": "babel-node test/setup.js && babel-node test/test.js",
-    "prepublish": "babel src/index.js > index.js"
+    "test": "node test/test.js",
+    "prepublish": "npm run build",
+    "build": "npx microbundle"
   },
   "repository": {
     "type": "git",
@@ -39,9 +40,16 @@
     "url": "https://github.com/konsumer/rawproto/issues"
   },
   "homepage": "https://github.com/konsumer/rawproto#readme",
-  "babel": {
-    "presets": [
-      "@babel/preset-env"
-    ]
-  }
+  "files": [
+    "dist/rawproto.cjs",
+    "dist/rawproto.cjs.map",
+    "dist/rawproto.modern.js",
+    "dist/rawproto.modern.js.map",
+    "dist/rawproto.module.js",
+    "dist/rawproto.module.js.map",
+    "dist/rawproto.umd.js",
+    "dist/rawproto.umd.js.map",
+    "cli.cjs",
+    "index.js"
+  ]
 }

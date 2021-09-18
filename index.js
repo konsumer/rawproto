@@ -1,4 +1,6 @@
-import { Reader } from 'protobufjs'
+import protobufjs from 'protobufjs'
+
+const { Reader } = protobufjs
 
 // indent by count
 const indent = count => Array(count).join('  ')
@@ -61,21 +63,21 @@ export const getData = (buffer, stringMode = 'auto') => {
     const wireType = tag & 7
     switch (wireType) {
       case 0: // int32, int64, uint32, bool, enum, etc
-        out.push({[id]: reader.uint32()})
+        out.push({ [id]: reader.uint32() })
         break
       case 1: // fixed64, sfixed64, double
-        out.push({[id]: reader.fixed64()})
+        out.push({ [id]: reader.fixed64() })
         break
       case 2: // string, bytes, sub-message
         const bytes = reader.bytes()
         try {
           const innerMessage = getData(bytes, stringMode)
-          out.push({[id]: innerMessage})
+          out.push({ [id]: innerMessage })
         } catch (e) {
           if (stringMode === 'binary') {
-            out.push({[id]: bytes})
+            out.push({ [id]: bytes })
           } else if (stringMode === 'string') {
-            out.push({[id]: bytes.toString()})
+            out.push({ [id]: bytes.toString() })
           } else {
             // search buffer for extended chars
             let hasExtended = false
@@ -85,9 +87,9 @@ export const getData = (buffer, stringMode = 'auto') => {
               }
             })
             if (hasExtended) {
-              out.push({[id]: bytes})
+              out.push({ [id]: bytes })
             } else {
-              out.push({[id]: bytes.toString()})
+              out.push({ [id]: bytes.toString() })
             }
           }
         }
@@ -95,7 +97,7 @@ export const getData = (buffer, stringMode = 'auto') => {
       // IGNORE start_group
       // IGNORE end_group
       case 5: // fixed32, sfixed32, float
-        out.push({[id]: reader.float()})
+        out.push({ [id]: reader.float() })
         break
       default: reader.skipType(wireType)
     }
