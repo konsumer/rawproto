@@ -136,6 +136,18 @@ getRaw(YOUR_URL)
 ```
 
 
+You can use `fetch`, like this (in ES6 with top-level `await`):
+
+```js
+import { getProto } from 'rawproto'
+import { fetch } from 'node-fetch'
+
+const r = await fetch('YOUR_URL_HERE')
+const b = await r.arrayBuffer()
+console.log(getProto(Buffer.from(b)))
+```
+
+
 ## limitations
 
 There are several types that just can't be guessed from the data. signedness and precision of numbers can't really be guessed, ints could be enums, and my `auto` system of guessing if it's a `string` or `bytes` is naive (but I don't think could be improved without any knowledge of the protocol.)
