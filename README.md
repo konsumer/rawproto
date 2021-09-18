@@ -139,12 +139,12 @@ getRaw(YOUR_URL)
 You can use `fetch`, like this (in ES6 with top-level `await`):
 
 ```js
-import { getProto } from 'rawproto'
+import { getData } from 'rawproto'
 import { fetch } from 'node-fetch'
 
 const r = await fetch('YOUR_URL_HERE')
 const b = await r.arrayBuffer()
-console.log(getProto(Buffer.from(b)))
+console.log(getData(Buffer.from(b)))
 ```
 
 
