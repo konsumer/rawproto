@@ -12,6 +12,8 @@ See some example output (from the demo message in this repo) [here](https://gist
 
 `npm i -S rawproto` will add this to your project.
 
+If you just want the CLI, and don't use node, you can also find standalone builds [here](https://github.com/konsumer/rawproto/releases).
+
 
 ## usage
 
@@ -65,6 +67,8 @@ console.log( rawproto.getData(buffer, 'binary') )
 You can also use rawproto to parse binary on the command-line!
 
 Install with `npm i -g rawproto` or use it without installation with `npx rawproto`.
+
+If you just want the CLI, and don't use node, you can also find standalone builds [here](https://github.com/konsumer/rawproto/releases).
 
 Use it like this:
 

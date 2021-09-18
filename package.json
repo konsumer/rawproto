@@ -9,7 +9,7 @@
   "module": "dist/rawproto.module.js",
   "unpkg": "dist/rawproto.umd.js",
   "bin": {
-    "rawproto": "./cli.cjs"
+    "rawproto": "rawproto.cjs"
   },
   "dependencies": {
     "protobufjs": "^6.10.2",
@@ -21,7 +21,8 @@
   "scripts": {
     "test": "node test/test.js",
     "prepublish": "npm run build",
-    "build": "npx microbundle"
+    "build": "npx microbundle",
+    "release": "npx pkg rawproto.cjs --out-path dist/release"
   },
   "repository": {
     "type": "git",
@@ -49,7 +50,7 @@
     "dist/rawproto.module.js.map",
     "dist/rawproto.umd.js",
     "dist/rawproto.umd.js.map",
-    "cli.cjs",
+    "rawproto.cjs",
     "index.js"
   ]
 }
