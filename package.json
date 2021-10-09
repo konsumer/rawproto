@@ -20,7 +20,7 @@
   },
   "scripts": {
     "test": "node ./test/test.js",
-    "prepublish": "npm run build",
+    "prepublishOnly": "npm run build",
     "build": "npx microbundle",
     "release": "npx pkg rawproto.cjs --out-path ./dist/release"
   },
