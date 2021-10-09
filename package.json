@@ -3,11 +3,11 @@
   "version": "0.7.1",
   "description": "Guess structure of protobuf binary from raw data",
   "type": "module",
-  "source": "index.js",
-  "exports": "dist/rawproto.modern.js",
-  "main": "dist/rawproto.cjs",
-  "module": "dist/rawproto.module.js",
-  "unpkg": "dist/rawproto.umd.js",
+  "source": "./index.js",
+  "exports": "./dist/rawproto.modern.js",
+  "main": "./dist/rawproto.cjs",
+  "module": "./dist/rawproto.module.js",
+  "unpkg": "./dist/rawproto.umd.js",
   "bin": {
     "rawproto": "rawproto.cjs"
   },
@@ -19,10 +19,10 @@
     "hexy": "^0.2.10"
   },
   "scripts": {
-    "test": "node test/test.js",
+    "test": "node ./test/test.js",
     "prepublish": "npm run build",
     "build": "npx microbundle",
-    "release": "npx pkg rawproto.cjs --out-path dist/release"
+    "release": "npx pkg rawproto.cjs --out-path ./dist/release"
   },
   "repository": {
     "type": "git",
@@ -42,15 +42,15 @@
   },
   "homepage": "https://github.com/konsumer/rawproto#readme",
   "files": [
-    "dist/rawproto.cjs",
-    "dist/rawproto.cjs.map",
-    "dist/rawproto.modern.js",
-    "dist/rawproto.modern.js.map",
-    "dist/rawproto.module.js",
-    "dist/rawproto.module.js.map",
-    "dist/rawproto.umd.js",
-    "dist/rawproto.umd.js.map",
-    "rawproto.cjs",
-    "index.js"
+    "./dist/rawproto.cjs",
+    "./dist/rawproto.cjs.map",
+    "./dist/rawproto.modern.js",
+    "./dist/rawproto.modern.js.map",
+    "./dist/rawproto.module.js",
+    "./dist/rawproto.module.js.map",
+    "./dist/rawproto.umd.js",
+    "./dist/rawproto.umd.js.map",
+    "./rawproto.cjs",
+    "./index.js"
   ]
 }
