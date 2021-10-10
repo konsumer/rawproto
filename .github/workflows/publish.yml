@@ -19,9 +19,9 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm run release
-      - run: mkdir -p dist/linux && mv dist/rawproto-linux dist/linux/rawproto
-      - run: mkdir -p dist/macos && mv dist/rawproto-macos dist/macos/rawproto
-      - run: mkdir -p dist/windows && mv dist/rawproto-win.exe dist/windows/rawproto.exe
+      - run: mkdir -p dist/linux && mv dist/release/rawproto-linux dist/linux/rawproto
+      - run: mkdir -p dist/macos && mv dist/release/rawproto-macos dist/macos/rawproto
+      - run: mkdir -p dist/windows && mv dist/release/rawproto-win.exe dist/windows/rawproto.exe
       
       - name: Publish on NPM
         uses: JS-DevTools/npm-publish@v1
