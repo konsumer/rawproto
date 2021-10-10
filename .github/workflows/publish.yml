@@ -1,0 +1,58 @@
+on: 
+  push:
+    tags:
+    - '*'
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      
+      - name: Test & Build
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16
+      
+      - run: npm test
+      - run: npm run build
+      - run: npm run release
+      - run: mkdir -p dist/linux && mv dist/rawproto-linux dist/linux/rawproto
+      - run: mkdir -p dist/macos && mv dist/rawproto-macos dist/macos/rawproto
+      - run: mkdir -p dist/windows && mv dist/rawproto-win.exe dist/windows/rawproto.exe
+      
+      - name: Publish on NPM
+        uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+      
+      - name: Release Windows
+        uses: thedoctor0/zip-release@master
+        with:
+          type: 'zip'
+          filename: 'rawproto-windows.zip'
+          directory: dist/windows
+          path: rawproto.exe
+      
+      - name: Release Mac (intel 64)
+        uses: thedoctor0/zip-release@master
+        with:
+          type: 'zip'
+          filename: 'rawproto-macos-i64.zip'
+          directory: dist/macos
+          path: rawproto
+      
+      - name: Release Linux (intel 64)
+        uses: thedoctor0/zip-release@master
+        with:
+          type: 'zip'
+          filename: 'rawproto-linux-i64.zip'
+          directory: dist/linux
+          path: rawproto
+
+      - name: Publish Releases
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "dist/**/*.zip"
+          token: ${{ secrets.GITHUB_TOKEN }}
