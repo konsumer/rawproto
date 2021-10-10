@@ -22,7 +22,8 @@
     "test": "node ./test/test.js",
     "prepublishOnly": "npm run build",
     "build": "npx microbundle",
-    "release": "npx pkg rawproto.cjs --out-path ./dist/release"
+    "release": "npx pkg rawproto.cjs --out-path ./dist/release",
+    "prerelease": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -50,7 +51,7 @@
     "dist/rawproto.module.js.map",
     "dist/rawproto.umd.js",
     "dist/rawproto.umd.js.map",
-    "rawproto.cjs",
-    "index.js"
+    "index.js",
+    "rawproto.cjs"
   ]
 }
