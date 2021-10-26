@@ -12,6 +12,8 @@ See some example output (from the demo message in this repo) [here](https://gist
 
 `npm i -S rawproto` will add this to your project.
 
+You can also use `npx rawproto` to run the CLI.
+
 If you just want the CLI, and don't use node, you can also find standalone builds [here](https://github.com/konsumer/rawproto/releases).
 
 
