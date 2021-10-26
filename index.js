@@ -44,7 +44,7 @@ const handleMessage = (msg, m = 'Root', level = 1) => {
     })
   })
 
-  return `${indent(level)}Message${m} {\n${lines.join('\n')}\n${indent(level)}}`
+  return `${indent(level)}message Message${m} {\n${lines.join('\n')}\n${indent(level)}}`
 }
 
 /**
