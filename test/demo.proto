@@ -1,10 +1,21 @@
 syntax = "proto3";
 
+// basic message
 message Test {
   repeated int32 nums = 1;
   int64 num = 2;
   string str = 3;
   repeated Child children = 4;
+}
+
+// same message with an extra field
+// used to test raw + defined parsing
+message Test2 {
+  repeated int32 nums = 1;
+  int64 num = 2;
+  string str = 3;
+  repeated Child children = 4;
+  string extra = 5;
 }
 
 message Child {

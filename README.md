@@ -10,7 +10,7 @@ See some example output (from the demo message in this repo) [here](https://gist
 
 ## installation
 
-`npm i -S rawproto` will add this to your project.
+`npm i rawproto` will add this to your project.
 
 You can also use `npx rawproto` to run the CLI.
 
@@ -22,17 +22,16 @@ If you just want the CLI, and don't use node, you can also find standalone build
 In ES6;
 
 ```js
-import { readFileSync, writeFileSync } from 'fs'
+import { readFile } from 'fs/promises'
 import { getData, getProto } from 'rawproto'
 
-const buffer = readFileSync('data.pb')
+const buffer = await readFile('data.pb')
 
 // get info about binary protobuf message
 console.log( getData(buffer) )
 
-// save guessed proto file for this binary data
-writeFileSync('data.proto', getProto(buffer) )
-
+// print proto guessed for this data
+console.log( getProto(buffer) )
 ```
 
 In plain CommonJS:
@@ -46,23 +45,31 @@ var buffer = fs.readFileSync('data.pb')
 // get info about binary protobuf message
 console.log( rawproto.getData(buffer) )
 
-// save guessed proto file for this binary data
-fs.writeFileSync('data.proto', rawproto.getProto(buffer) )
-
+// print proto guessed for this data
+console.log( rawproto.getProto(buffer) )
 ```
 
-For both `getProto` and `getData` the second param is `stringMode`.
+### getData(buffer, stringMode, root) ⇒ <code>Array.&lt;object&gt;</code>
+Turn a protobuf into a data-object
+  
+**Returns**: <code>Array.&lt;object&gt;</code> - Info about the protobuf  
 
-This is to decide how to deal with strings:
+| Param | Type | Description |
+| --- | --- | --- |
+| buffer | <code>Buffer</code> | The proto in a binary buffer |
+| stringMode | <code>string</code> | How to handle strings that aren't sub-messages: "auto" - guess based on chars, "string" - always a string, "binary" - always a buffer |
+| root | <code>Object</code> | protobufjs message-type (for partial parsing) |
 
-* `auto` - (default) guess how to deal with strings based on characters in string
-* `string` - assume they are all strings. This can mangle strings that contain any extended chars
-* `binary` - assume all strings are buffers 
+### getProto(buffer, stringMode, root) ⇒ <code>string</code>
+Gets the proto-definition string from a binary protobuf message
+ 
+**Returns**: <code>string</code> - The proto SDL  
 
-```js
-// get info about binary protobuf message, assume all strings are binary
-console.log( rawproto.getData(buffer, 'binary') )
-```
+| Param | Type | Description |
+| --- | --- | --- |
+| buffer | <code>Buffer</code> | The buffer |
+| stringMode | <code>string</code> | How to handle strings that aren't sub-messages: "auto" - guess based on chars, "string" - always a string, "binary" - always a buffer |
+| root | <code>Object</code> | protobufjs message-type (for partial parsing) |
 
 ## cli
 

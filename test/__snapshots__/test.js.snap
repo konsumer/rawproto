@@ -1,0 +1,229 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`rawproto Some missing fields 1`] = `
+Array [
+  Object {
+    "1": Object {
+      "data": Array [
+        1,
+        2,
+        3,
+        4,
+        5,
+      ],
+      "type": "Buffer",
+    },
+  },
+  Object {
+    "2": 1,
+  },
+  Object {
+    "3": "hello",
+  },
+  Object {
+    "4": Array [
+      Object {
+        "1": 1,
+      },
+      Object {
+        "2": "cool",
+      },
+      Object {
+        "3": Array [
+          Object {
+            "1": 1,
+          },
+        ],
+      },
+    ],
+  },
+  Object {
+    "4": Array [
+      Object {
+        "1": 2,
+      },
+      Object {
+        "2": "awesome",
+      },
+      Object {
+        "3": Array [
+          Object {
+            "1": 2,
+          },
+        ],
+      },
+    ],
+  },
+  Object {
+    "4": Array [
+      Object {
+        "1": 3,
+      },
+      Object {
+        "2": "neat",
+      },
+      Object {
+        "3": Array [
+          Object {
+            "1": 3,
+          },
+        ],
+      },
+    ],
+  },
+  Object {
+    "5": "this one is extra",
+  },
+]
+`;
+
+exports[`rawproto Test raw 1`] = `
+Array [
+  Object {
+    "1": Object {
+      "data": Array [
+        1,
+        2,
+        3,
+        4,
+        5,
+      ],
+      "type": "Buffer",
+    },
+  },
+  Object {
+    "2": 1,
+  },
+  Object {
+    "3": "hello",
+  },
+  Object {
+    "4": Array [
+      Object {
+        "1": 1,
+      },
+      Object {
+        "2": "cool",
+      },
+      Object {
+        "3": Array [
+          Object {
+            "1": 1,
+          },
+        ],
+      },
+    ],
+  },
+  Object {
+    "4": Array [
+      Object {
+        "1": 2,
+      },
+      Object {
+        "2": "awesome",
+      },
+      Object {
+        "3": Array [
+          Object {
+            "1": 2,
+          },
+        ],
+      },
+    ],
+  },
+  Object {
+    "4": Array [
+      Object {
+        "1": 3,
+      },
+      Object {
+        "2": "neat",
+      },
+      Object {
+        "3": Array [
+          Object {
+            "1": 3,
+          },
+        ],
+      },
+    ],
+  },
+]
+`;
+
+exports[`rawproto Test2 raw 1`] = `
+Array [
+  Object {
+    "1": Object {
+      "data": Array [
+        1,
+        2,
+        3,
+        4,
+        5,
+      ],
+      "type": "Buffer",
+    },
+  },
+  Object {
+    "2": 1,
+  },
+  Object {
+    "3": "hello",
+  },
+  Object {
+    "4": Array [
+      Object {
+        "1": 1,
+      },
+      Object {
+        "2": "cool",
+      },
+      Object {
+        "3": Array [
+          Object {
+            "1": 1,
+          },
+        ],
+      },
+    ],
+  },
+  Object {
+    "4": Array [
+      Object {
+        "1": 2,
+      },
+      Object {
+        "2": "awesome",
+      },
+      Object {
+        "3": Array [
+          Object {
+            "1": 2,
+          },
+        ],
+      },
+    ],
+  },
+  Object {
+    "4": Array [
+      Object {
+        "1": 3,
+      },
+      Object {
+        "2": "neat",
+      },
+      Object {
+        "3": Array [
+          Object {
+            "1": 3,
+          },
+        ],
+      },
+    ],
+  },
+  Object {
+    "5": "this one is extra",
+  },
+]
+`;

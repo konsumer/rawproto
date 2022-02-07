@@ -15,14 +15,11 @@
     "protobufjs": "^6.10.2",
     "yargs": "^16.2.0"
   },
-  "devDependencies": {
-    "hexy": "^0.2.10"
-  },
   "scripts": {
-    "test": "node ./test/test.js",
+    "test": "NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 npx -y jest",
     "prepublishOnly": "npm run build",
-    "build": "npx microbundle",
-    "release": "npx pkg rawproto.cjs --out-path ./dist/release"
+    "build": "npx -y microbundle",
+    "release": "npx -y pkg rawproto.cjs --out-path ./dist/release"
   },
   "repository": {
     "type": "git",
@@ -50,7 +47,9 @@
     "dist/rawproto.module.js.map",
     "dist/rawproto.umd.js",
     "dist/rawproto.umd.js.map",
-    "index.js",
     "rawproto.cjs"
-  ]
+  ],
+  "devDependencies": {
+    "hexy": "^0.3.4"
+  }
 }
