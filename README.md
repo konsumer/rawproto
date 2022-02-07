@@ -49,6 +49,22 @@ console.log( rawproto.getData(buffer) )
 console.log( rawproto.getProto(buffer) )
 ```
 
+You can do partial-parsing, if you know some of the fields:
+
+```js
+import { readFile } from 'fs/promises'
+import protobuf from 'protobufjs'
+import { getData, getProto } from 'rawproto'
+
+const proto = await protobuf.load(new URL('demo.proto', import.meta.url).pathname)
+const Test = proto.lookupType('Test')
+const buffer = await readFile('data.pb')
+
+// get info about binary protobuf message, with partial info
+console.log(getData(buffer, Test))
+```
+
+
 You can use `fetch`, like this (in ES6 with top-level `await`):
 
 ```js

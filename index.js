@@ -51,8 +51,8 @@ const handleMessage = (msg, m = 'Root', level = 1) => {
  * Turn a protobuf into a data-object
  *
  * @param      {Buffer}   buffer     The proto in a binary buffer
- * @param      {string}   stringMode How to handle strings that aren't sub-messages: "auto" - guess based on chars, "string" - always a string, "binary" - always a buffer
  * @param      {Object}   root       protobufjs message-type (for partial parsing)
+ * @param      {string}   stringMode How to handle strings that aren't sub-messages: "auto" - guess based on chars, "string" - always a string, "binary" - always a buffer
  * @return     {object[]}            Info about the protobuf
  */
 export function getData(buffer, root, stringMode = 'auto') {
@@ -103,6 +103,10 @@ export function getData(buffer, root, stringMode = 'auto') {
       default: reader.skipType(wireType)
     }
   }
+  if (root) {
+    const decoded = root.decode(buffer)
+    // TODO: work out decoded/raw merge
+  }
   return out
 }
 
@@ -110,11 +114,11 @@ export function getData(buffer, root, stringMode = 'auto') {
  * Gets the proto-definition string from a binary protobuf message
  *
  * @param      {Buffer}  buffer     The proto in a binary buffer
- * @param      {string}  stringMode How to handle strings that aren't sub-messages: "auto" - guess based on chars, "string" - always a string, "binary" - always a buffer
  * @param      {Object}  root       protobufjs message-type (for partial parsing)
+ * @param      {string}  stringMode How to handle strings that aren't sub-messages: "auto" - guess based on chars, "string" - always a string, "binary" - always a buffer
  * @return     {string}  The proto SDL
  */
-export function getProto(buffer, stringMode = 'auto') {
+export function getProto(buffer, root, stringMode = 'auto') {
   const data = getData(buffer, stringMode)
   let out = 'syntax = "proto3";\n\n'
   out += handleMessage(data)
