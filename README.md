@@ -57,8 +57,8 @@ Turn a protobuf into a data-object
 | Param | Type | Description |
 | --- | --- | --- |
 | buffer | <code>Buffer</code> | The proto in a binary buffer |
-| stringMode | <code>string</code> | How to handle strings that aren't sub-messages: "auto" - guess based on chars, "string" - always a string, "binary" - always a buffer |
 | root | <code>Object</code> | protobufjs message-type (for partial parsing) |
+| stringMode | <code>string</code> | How to handle strings that aren't sub-messages: "auto" - guess based on chars, "string" - always a string, "binary" - always a buffer |
 
 ### getProto(buffer, stringMode, root) ⇒ <code>string</code>
 Gets the proto-definition string from a binary protobuf message
@@ -68,8 +68,8 @@ Gets the proto-definition string from a binary protobuf message
 | Param | Type | Description |
 | --- | --- | --- |
 | buffer | <code>Buffer</code> | The buffer |
-| stringMode | <code>string</code> | How to handle strings that aren't sub-messages: "auto" - guess based on chars, "string" - always a string, "binary" - always a buffer |
 | root | <code>Object</code> | protobufjs message-type (for partial parsing) |
+| stringMode | <code>string</code> | How to handle strings that aren't sub-messages: "auto" - guess based on chars, "string" - always a string, "binary" - always a buffer |
 
 ## cli
 
