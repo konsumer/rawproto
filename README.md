@@ -49,6 +49,17 @@ console.log( rawproto.getData(buffer) )
 console.log( rawproto.getProto(buffer) )
 ```
 
+You can use `fetch`, like this (in ES6 with top-level `await`):
+
+```js
+import { getData } from 'rawproto'
+import { fetch } from 'node-fetch'
+
+const r = await fetch('YOUR_URL_HERE')
+const b = await r.arrayBuffer()
+console.log(getData(Buffer.from(b)))
+```
+
 ### getData(buffer, stringMode, root) ⇒ <code>Array.&lt;object&gt;</code>
 Turn a protobuf into a data-object
   
@@ -121,47 +132,6 @@ Examples:
   rawproto -j -s binary < myfile.pb         Get JSON represenation of binary
                                             protobuf, assume all strings are
                                             binary buffers
-```
-
-## http
-
-I noticed that various HTTP request libraries convert binary buffers into wrong-encoded text, and this can cause issues. If you build your buffer manually with `Buffer.concat`, it seems to work ok:
-
-```js
-import http from 'http'
-import https from 'https'
-import { getProto } from 'rawproto'
-
-const getRaw = url => new Promise((resolve, reject) => {
-  const get = url.substr(0,5) === 'https' ? https.get : http.get
-  get(url, response => {
-    if (response.statusCode < 200 || response.statusCode > 299) {
-      return reject(new Error('Failed to load page, status code: ' + response.statusCode))
-    }
-    const body = []
-    response.on('error', (err) => reject(err))
-    response.on('data', (chunk) => body.push(chunk))
-    response.on('end', () => resolve(getProto(Buffer.concat(body))))
-  })
-})
-
-// use like this:
-getRaw(YOUR_URL)
-  .then(p => {
-    // do stuff with p
-  })
-```
-
-
-You can use `fetch`, like this (in ES6 with top-level `await`):
-
-```js
-import { getData } from 'rawproto'
-import { fetch } from 'node-fetch'
-
-const r = await fetch('YOUR_URL_HERE')
-const b = await r.arrayBuffer()
-console.log(getData(Buffer.from(b)))
 ```
 
 
