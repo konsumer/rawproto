@@ -82,37 +82,45 @@ If you just want the CLI, and don't use node, you can also find standalone build
 Use it like this:
 
 ```
-cat myfile.pb | rawproto parse
+cat myfile.pb | rawproto
 ```
 
 or
 
 ```
-rawproto parse < myfile.pb
+rawproto < myfile.pb
+```
+
+or
+
+```
+npx rawproto < myfile.pb
 ```
 
 ```
-Usage: rawproto <COMMAND>
-
-Commands:
-  rawproto guess  Guess the proto definition
-  rawproto parse  Raw-parse the binary protobuf
+Usage: rawproto [options]
 
 Options:
-  --version  Show version number                                       [boolean]
-  --help     Show help                                                 [boolean]
-```
+      --version     Show version number                                [boolean]
+  -j, --json        Output JSON instead of proto definition     [default: false]
+  -m, --message     Message name to decode as (for partial raw)
+  -i, --include     Include proto SDL file (for partial raw)
+  -s, --stringMode  How should strings be handled? "auto" detects if it's binary
+                    based on characters, "string" is always a JS string, and
+                    "binary" is always a buffer.
+                         [choices: "auto", "string", "binary"] [default: "auto"]
+  -h, --help        Show help                                          [boolean]
 
-so to putput a raw-json parse:
-
-```
-npx rawproto parse < ~/Downloads/details.pb
-```
-
-or guess the proto-structure:
-
-```
-npx rawproto guess < ~/Downloads/details.pb
+Examples:
+  rawproto < myfile.pb                      Get guessed proto3 definition from
+                                            binary protobuf
+  rawproto -i def.proto -m Test <           Guess any fields that aren't defined
+  myfile.pb                                 in Test
+  rawproto -j < myfile.pb                   Get JSON represenation of binary
+                                            protobuf
+  rawproto -j -s binary < myfile.pb         Get JSON represenation of binary
+                                            protobuf, assume all strings are
+                                            binary buffers
 ```
 
 ## http

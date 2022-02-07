@@ -109,7 +109,7 @@ export function getData(buffer, root, stringMode = 'auto') {
 /**
  * Gets the proto-definition string from a binary protobuf message
  *
- * @param      {Buffer}  buffer  The buffer
+ * @param      {Buffer}  buffer     The proto in a binary buffer
  * @param      {string}  stringMode How to handle strings that aren't sub-messages: "auto" - guess based on chars, "string" - always a string, "binary" - always a buffer
  * @param      {Object}  root       protobufjs message-type (for partial parsing)
  * @return     {string}  The proto SDL
