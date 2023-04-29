@@ -40,4 +40,10 @@ describe('rawproto', () => {
   test('Some missing fields', () => {
     expect(getData(test2, Test)).toMatchSnapshot()
   })
+
+  test('getProto', () => {
+    const p = getProto(test2, Test2)
+    console.log(p)
+    expect(p).toMatchSnapshot()
+  })
 })

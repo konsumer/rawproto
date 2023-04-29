@@ -55,7 +55,7 @@ const handleMessage = (msg, m = 'Root', level = 1) => {
  * @param      {string}   stringMode How to handle strings that aren't sub-messages: "auto" - guess based on chars, "string" - always a string, "binary" - always a buffer
  * @return     {object[]}            Info about the protobuf
  */
-export function getData(buffer, root, stringMode = 'auto') {
+export function getData (buffer, root, stringMode = 'auto') {
   const reader = Reader.create(buffer)
   const out = []
   while (reader.pos < reader.len) {
@@ -118,8 +118,8 @@ export function getData(buffer, root, stringMode = 'auto') {
  * @param      {string}  stringMode How to handle strings that aren't sub-messages: "auto" - guess based on chars, "string" - always a string, "binary" - always a buffer
  * @return     {string}  The proto SDL
  */
-export function getProto(buffer, root, stringMode = 'auto') {
-  const data = getData(buffer, stringMode)
+export function getProto (buffer, root, stringMode = 'auto') {
+  const data = getData(buffer, root, stringMode)
   let out = 'syntax = "proto3";\n\n'
   out += handleMessage(data)
   return out
