@@ -12,7 +12,7 @@
     "rawproto": "rawproto.cjs"
   },
   "dependencies": {
-    "protobufjs": "^6.10.2",
+    "protobufjs": "^6.11.3",
     "yargs": "^16.2.0"
   },
   "scripts": {

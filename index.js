@@ -9,7 +9,7 @@ const indent = count => Array(count).join('  ')
 const isFloat = n => Number(n) === n && n % 1 !== 0
 
 // turn a message into a proto-representation
-const handleMessage = (msg, m = 'Root', level = 1) => {
+const handleMessage = (msg, name = 'MessageRoot', level = 1) => {
   const seen = []
   const repeated = []
   const lines = msg.map(field => {
@@ -44,7 +44,7 @@ const handleMessage = (msg, m = 'Root', level = 1) => {
     })
   })
 
-  return `${indent(level)}message Message${m} {\n${lines.join('\n')}\n${indent(level)}}`
+  return `${indent(level)}message ${name} {\n${lines.join('\n')}\n${indent(level)}}`
 }
 
 /**
@@ -118,9 +118,10 @@ export function getData (buffer, root, stringMode = 'auto') {
  * @param      {string}  stringMode How to handle strings that aren't sub-messages: "auto" - guess based on chars, "string" - always a string, "binary" - always a buffer
  * @return     {string}  The proto SDL
  */
-export function getProto (buffer, root, stringMode = 'auto') {
+export function getProto (buffer, root, name = 'MessageRoot', stringMode = 'auto') {
+  console.log({ name })
   const data = getData(buffer, root, stringMode)
   let out = 'syntax = "proto3";\n\n'
-  out += handleMessage(data)
+  out += handleMessage(data, name)
   return out
 }

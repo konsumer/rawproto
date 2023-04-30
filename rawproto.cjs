@@ -1,20 +1,22 @@
 #!/usr/bin/env node
 
 const rawproto = require('.')
-const yargs = require('yargs')
+const yargs = require('yargs/yargs')
 const pkg = require('./package.json')
 const protobufjs = require('protobufjs')
 
-const args = yargs
+const args = yargs(process.argv.slice(2))
   .usage('Usage: $0 [options]')
   .option('json', {
     alias: 'j',
     describe: 'Output JSON instead of proto definition',
-    default: false
+    type: 'boolean',
+  default: false
   })
   .option('message', {
     alias: 'm',
-    describe: 'Message name to decode as (for partial raw)'
+    describe: 'Message name to decode as (for partial raw)',
+    default: 'MessageRoot'
   })
   .option('include', {
     alias: 'i',
@@ -33,23 +35,22 @@ const args = yargs
   .example('rawproto -j -s binary < myfile.pb', 'Get JSON represenation of binary protobuf, assume all strings are binary buffers')
   .argv
 
-process.stdin.on('readable', function () {
-  const body = []
-  process.stdin
-    .on('data', function (chunk) {
-      body.push(Buffer.from(chunk))
-    })
-    .on('end', async function () {
-      const buffer = Buffer.concat(body)
-      let root
-      if (args.include && args.message) {
-        const p = await protobuf.load(args.include)
-        root = p.lookupType(args.message)
-      }
-      if (args.json) {
-        console.log(JSON.stringify(rawproto.getData(buffer, root, args.stringMode), null, 2))
-      } else {
-        console.log(rawproto.getProto(buffer, root, args.stringMode))
-      }
-    })
-})
+const body = []
+process.stdin
+  .on('data', function (chunk) {
+    body.push(Buffer.from(chunk))
+  })
+  .on('end', async function () {
+    const buffer = Buffer.concat(body)
+    let root
+    if (args.include && args.message) {
+      const p = await protobuf.load(args.include)
+      root = p.lookupType(args.message)
+    }
+    if (args.json) {
+      console.log(JSON.stringify(rawproto.getData(buffer, root, args.stringMode), null, 2))
+    } else {
+      console.log(rawproto.getProto(buffer, root, args.message, args.stringMode))
+    }
+  })
+
