@@ -27,7 +27,7 @@ const handleMessage = (msg, name = 'MessageRoot', level = 1) => {
       case 'array': // sub-message
         if (seen.indexOf(n) === -1) {
           seen.push(n)
-          return `\n${handleMessage(field[n], n, level + 1)}\n${indent(level + 1)}\n${indent(level + 1)}Message${n} subMessage${n} = ${n};`
+          return `\n${handleMessage(field[n], name, level + 1)}\n${indent(level + 1)}\n${indent(level + 1)}Message${n} subMessage${n} = ${n};`
         } else {
           repeated.push(n)
         }
@@ -119,7 +119,6 @@ export function getData (buffer, root, stringMode = 'auto') {
  * @return     {string}  The proto SDL
  */
 export function getProto (buffer, root, name = 'MessageRoot', stringMode = 'auto') {
-  console.log({ name })
   const data = getData(buffer, root, stringMode)
   let out = 'syntax = "proto3";\n\n'
   out += handleMessage(data, name)
