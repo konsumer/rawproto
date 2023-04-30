@@ -1,0 +1,270 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`rawproto > Some missing fields 1`] = `
+[
+  {
+    "1": {
+      "data": [
+        1,
+        2,
+        3,
+        4,
+        5,
+      ],
+      "type": "Buffer",
+    },
+  },
+  {
+    "2": 1,
+  },
+  {
+    "3": "hello",
+  },
+  {
+    "4": {
+      "data": [
+        8,
+        1,
+        18,
+        4,
+        99,
+        111,
+        111,
+        108,
+        26,
+        2,
+        8,
+        1,
+      ],
+      "type": "Buffer",
+    },
+  },
+  {
+    "4": {
+      "data": [
+        8,
+        2,
+        18,
+        7,
+        97,
+        119,
+        101,
+        115,
+        111,
+        109,
+        101,
+        26,
+        2,
+        8,
+        2,
+      ],
+      "type": "Buffer",
+    },
+  },
+  {
+    "4": {
+      "data": [
+        8,
+        3,
+        18,
+        4,
+        110,
+        101,
+        97,
+        116,
+        26,
+        2,
+        8,
+        3,
+      ],
+      "type": "Buffer",
+    },
+  },
+  {
+    "5": "this one is extra",
+  },
+]
+`;
+
+exports[`rawproto > Test raw 1`] = `
+[
+  {
+    "1": {
+      "data": [
+        1,
+        2,
+        3,
+        4,
+        5,
+      ],
+      "type": "Buffer",
+    },
+  },
+  {
+    "2": 1,
+  },
+  {
+    "3": "hello",
+  },
+  {
+    "4": {
+      "data": [
+        8,
+        1,
+        18,
+        4,
+        99,
+        111,
+        111,
+        108,
+        26,
+        2,
+        8,
+        1,
+      ],
+      "type": "Buffer",
+    },
+  },
+  {
+    "4": {
+      "data": [
+        8,
+        2,
+        18,
+        7,
+        97,
+        119,
+        101,
+        115,
+        111,
+        109,
+        101,
+        26,
+        2,
+        8,
+        2,
+      ],
+      "type": "Buffer",
+    },
+  },
+  {
+    "4": {
+      "data": [
+        8,
+        3,
+        18,
+        4,
+        110,
+        101,
+        97,
+        116,
+        26,
+        2,
+        8,
+        3,
+      ],
+      "type": "Buffer",
+    },
+  },
+]
+`;
+
+exports[`rawproto > Test2 raw 1`] = `
+[
+  {
+    "1": {
+      "data": [
+        1,
+        2,
+        3,
+        4,
+        5,
+      ],
+      "type": "Buffer",
+    },
+  },
+  {
+    "2": 1,
+  },
+  {
+    "3": "hello",
+  },
+  {
+    "4": {
+      "data": [
+        8,
+        1,
+        18,
+        4,
+        99,
+        111,
+        111,
+        108,
+        26,
+        2,
+        8,
+        1,
+      ],
+      "type": "Buffer",
+    },
+  },
+  {
+    "4": {
+      "data": [
+        8,
+        2,
+        18,
+        7,
+        97,
+        119,
+        101,
+        115,
+        111,
+        109,
+        101,
+        26,
+        2,
+        8,
+        2,
+      ],
+      "type": "Buffer",
+    },
+  },
+  {
+    "4": {
+      "data": [
+        8,
+        3,
+        18,
+        4,
+        110,
+        101,
+        97,
+        116,
+        26,
+        2,
+        8,
+        3,
+      ],
+      "type": "Buffer",
+    },
+  },
+  {
+    "5": "this one is extra",
+  },
+]
+`;
+
+exports[`rawproto > getProto 1`] = `
+"syntax = \\"proto3\\";
+
+message MessageRoot {
+  bytes field1 = 1; // could be a repeated-value, string, bytes, or malformed sub-message
+  int32 field2 = 2; // could be a int32, int64, uint32, bool, enum, etc, or even a float of some kind
+  string field3 = 3; // could be a repeated-value, string, bytes, or malformed sub-message
+  bytes field4 = 4; // could be a repeated-value, string, bytes, or malformed sub-message
+  bytes field4 = 4; // could be a repeated-value, string, bytes, or malformed sub-message
+  bytes field4 = 4; // could be a repeated-value, string, bytes, or malformed sub-message
+  string field5 = 5; // could be a repeated-value, string, bytes, or malformed sub-message
+}"
+`;
