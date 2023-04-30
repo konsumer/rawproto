@@ -72,7 +72,7 @@ export function getData (buffer, root, stringMode = 'auto') {
       case 2: // string, bytes, sub-message
         const bytes = reader.bytes()
         try {
-          const innerMessage = getData(bytes, stringMode)
+          const innerMessage = getData(bytes, root, stringMode)
           out.push({ [id]: innerMessage })
         } catch (e) {
           if (stringMode === 'binary') {
