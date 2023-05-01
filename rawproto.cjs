@@ -22,6 +22,11 @@ const args = yargs(process.argv.slice(2))
     alias: 'i',
     describe: 'Include proto SDL file (for partial raw)'
   })
+  .option('field-prefix', {
+    alias: 'f',
+    describe: 'Add this string to fields for JSON output',
+    default: ''
+  })
   .choices('s', ['auto', 'string', 'binary'])
   .alias('s', 'stringMode')
   .describe('s', 'How should strings be handled? "auto" detects if it\'s binary based on characters, "string" is always a JS string, and "binary" is always a buffer.')
@@ -48,7 +53,7 @@ process.stdin
       root = p.lookupType(args.message)
     }
     if (args.json) {
-      console.log(JSON.stringify(rawproto.getData(buffer, root, args.stringMode), null, 2))
+      console.log(JSON.stringify(rawproto.getData(buffer, root, args.stringMode, args.fieldPrefix), null, 2))
     } else {
       console.log(rawproto.getProto(buffer, root, args.message, args.stringMode))
     }

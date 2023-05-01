@@ -55,30 +55,31 @@ const handleMessage = (msg, name = 'MessageRoot', level = 1) => {
  * @param      {string}   stringMode How to handle strings that aren't sub-messages: "auto" - guess based on chars, "string" - always a string, "binary" - always a buffer
  * @return     {object[]}            Info about the protobuf
  */
-export function getData (buffer, root, stringMode = 'auto') {
+export function getData (buffer, root, stringMode = 'auto', fieldPrefix = '') {
   const reader = Reader.create(buffer)
   const out = []
   while (reader.pos < reader.len) {
     const tag = reader.uint64()
     const id = tag >>> 3
     const wireType = tag & 7
+    const key = fieldPrefix + id.toString()
     switch (wireType) {
       case 0: // int32, int64, uint32, bool, enum, etc
-        out.push({ [id]: reader.uint32() })
+        out.push({ [key]: reader.uint32() })
         break
       case 1: // fixed64, sfixed64, double
-        out.push({ [id]: reader.fixed64() })
+        out.push({ [key]: reader.fixed64() })
         break
       case 2: // string, bytes, sub-message
         const bytes = reader.bytes()
         try {
-          const innerMessage = getData(bytes, root, stringMode)
-          out.push({ [id]: innerMessage })
+          const innerMessage = getData(bytes, root, stringMode, fieldPrefix)
+          out.push({ [key]: innerMessage })
         } catch (e) {
           if (stringMode === 'binary') {
-            out.push({ [id]: bytes })
+            out.push({ [key]: bytes })
           } else if (stringMode === 'string') {
-            out.push({ [id]: bytes.toString() })
+            out.push({ [key]: bytes.toString() })
           } else {
             // search buffer for extended chars
             let hasExtended = false
@@ -88,9 +89,9 @@ export function getData (buffer, root, stringMode = 'auto') {
               }
             })
             if (hasExtended) {
-              out.push({ [id]: bytes })
+              out.push({ [key]: bytes })
             } else {
-              out.push({ [id]: bytes.toString() })
+              out.push({ [key]: bytes.toString() })
             }
           }
         }
@@ -98,7 +99,7 @@ export function getData (buffer, root, stringMode = 'auto') {
       // IGNORE start_group
       // IGNORE end_group
       case 5: // fixed32, sfixed32, float
-        out.push({ [id]: reader.float() })
+        out.push({ [key]: reader.float() })
         break
       default: reader.skipType(wireType)
     }
@@ -107,7 +108,7 @@ export function getData (buffer, root, stringMode = 'auto') {
     const decoded = root.decode(buffer)
     // TODO: work out decoded/raw merge
   }
-  return out
+  // return out
 }
 
 /**
