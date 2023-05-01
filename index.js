@@ -108,7 +108,7 @@ export function getData (buffer, root, stringMode = 'auto', fieldPrefix = '') {
     const decoded = root.decode(buffer)
     // TODO: work out decoded/raw merge
   }
-  // return out
+  return out
 }
 
 /**
