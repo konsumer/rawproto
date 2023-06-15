@@ -4,7 +4,7 @@
   "description": "Guess structure of protobuf binary from raw data",
   "type": "module",
   "source": "./index.js",
-  "exports": "./dist/rawproto.modern.js",
+  "exports": "./dist/rawproto.cjs",
   "main": "./dist/rawproto.cjs",
   "module": "./dist/rawproto.module.js",
   "unpkg": "./dist/rawproto.umd.js",
@@ -39,15 +39,7 @@
   },
   "homepage": "https://github.com/konsumer/rawproto#readme",
   "files": [
-    "dist/rawproto.cjs",
-    "dist/rawproto.cjs.map",
-    "dist/rawproto.modern.js",
-    "dist/rawproto.modern.js.map",
-    "dist/rawproto.module.js",
-    "dist/rawproto.module.js.map",
-    "dist/rawproto.umd.js",
-    "dist/rawproto.umd.js.map",
-    "rawproto.cjs"
+    "dist/**/*"
   ],
   "devDependencies": {
     "hexy": "^0.3.4",
