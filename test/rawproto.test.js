@@ -25,8 +25,8 @@ const demoObject = {
 const test1 = Test.encode(demoObject).finish()
 const test2 = Test2.encode(demoObject).finish()
 
-console.log(hexy.hexy(test1))
-console.log(hexy.hexy(test2))
+// console.log(hexy.hexy(test1))
+// console.log(hexy.hexy(test2))
 
 describe('rawproto', () => {
   test('Test raw', () => {
@@ -43,7 +43,7 @@ describe('rawproto', () => {
 
   test('getProto', () => {
     const p = getProto(test2, Test2)
-    console.log(p)
+    // console.log(p)
     expect(p).toMatchSnapshot()
   })
 })

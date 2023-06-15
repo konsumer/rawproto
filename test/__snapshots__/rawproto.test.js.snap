@@ -241,11 +241,11 @@ message MessageRoot {
   string field3 = 3; // could be a repeated-value, string, bytes, or malformed sub-message
   bytes field4 = 4; // could be a repeated-value, string, bytes, or malformed sub-message
 
-  message 4 {
+  message MessageRoot {
     int32 field1 = 1; // could be a int32, int64, uint32, bool, enum, etc, or even a float of some kind
     string field2 = 2; // could be a repeated-value, string, bytes, or malformed sub-message
 
-    message 3 {
+    message MessageRoot {
       int32 field1 = 1; // could be a int32, int64, uint32, bool, enum, etc, or even a float of some kind
     }
     
