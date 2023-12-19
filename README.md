@@ -8,6 +8,8 @@ You can use this to reverse-engineer a protobuf protocol, based on a binary prot
 
 See some example output (from the demo message in this repo) [here](https://gist.github.com/konsumer/3647d466b497e6950b12291e47f11eeb).
 
+If you want an even lighter library, with no dependencies, and only want to view the output (no proto def needed) check out [rawprotoparse].(https://github.com/konsumer/rawprotoparse)
+
 ## installation
 
 `npm i rawproto` will add this to your project.
