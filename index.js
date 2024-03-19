@@ -27,11 +27,12 @@ const handleMessage = (msg, name = 'MessageRoot', level = 1) => {
       case 'array': // sub-message
         if (seen.indexOf(n) === -1) {
           seen.push(n)
-          return `\n${handleMessage(field[n], name, level + 1)}\n${indent(level + 1)}\n${indent(level + 1)}Message${n} subMessage${n} = ${n};`
+          return `\n${handleMessage(field[n], `Message${n}`, level + 1)}\n${indent(level + 1)}\n${indent(level + 1)}Message${n} subMessage${n} = ${n};`
         } else {
           repeated.push(n)
         }
     }
+    return false
   }).filter(l => l)
 
   const repeatHandled = []
@@ -58,6 +59,7 @@ const handleMessage = (msg, name = 'MessageRoot', level = 1) => {
 export function getData (buffer, root, stringMode = 'auto', fieldPrefix = '') {
   const reader = Reader.create(buffer)
   const out = []
+  let bytes
   while (reader.pos < reader.len) {
     const tag = reader.uint64()
     const id = tag >>> 3
@@ -71,7 +73,7 @@ export function getData (buffer, root, stringMode = 'auto', fieldPrefix = '') {
         out.push({ [key]: reader.fixed64() })
         break
       case 2: // string, bytes, sub-message
-        const bytes = reader.bytes()
+        bytes = reader.bytes()
         try {
           const innerMessage = getData(bytes, root, stringMode, fieldPrefix)
           out.push({ [key]: innerMessage })
@@ -104,10 +106,10 @@ export function getData (buffer, root, stringMode = 'auto', fieldPrefix = '') {
       default: reader.skipType(wireType)
     }
   }
-  if (root) {
-    const decoded = root.decode(buffer)
-    // TODO: work out decoded/raw merge
-  }
+  // if (root) {
+  //   const decoded = root.decode(buffer)
+  //   // TODO: work out decoded/raw merge
+  // }
   return out
 }
 
