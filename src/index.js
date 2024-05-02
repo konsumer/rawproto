@@ -45,7 +45,7 @@ export function query (tree, path, choices = {}, prefix = '') {
       prefix = choices
       choices = {}
     } else {
-      throw new Error('Usage: query(tree, choices={}, path="X.X.X") or query(tree, path="X.X.X")')
+      throw new Error('Usage: query(tree, choices, "X.X.X") or query(tree, "X.X.X:type")')
     }
   }
 
@@ -68,6 +68,7 @@ export function query (tree, path, choices = {}, prefix = '') {
   const pp = p.split('.').map(i => parseInt(i))
   const targetField = parseInt(pp.pop())
 
+  // this will give you just the messages that the query asked for
   for (const pathIndex of pp) {
     current = current
       .filter(c => c.index === parseInt(pathIndex))
@@ -75,8 +76,44 @@ export function query (tree, path, choices = {}, prefix = '') {
       .reduce((a, c) => [...a, ...c], [])
   }
 
-  // works for varint & len:bytes
-  let valuePuller = f => f.value
+  // raw
+  let valuePuller = f => f
+
+  if (['int', 'uint', 'float', 'bool'].includes(type)) {
+    valuePuller = f => {
+      if (f.type === wireTypes.VARINT) {
+        if (type === 'uint' || type === 'int') { // I don't really support signed ints, but the user may be mistaken here (using int for VARINT)
+          return f.value
+        }
+        if (type === 'bool') {
+          return !!f.value
+        }
+      }
+      // numeric types that require a view
+      if (f.type === wireTypes.I64 && type === 'uint') {
+        return decoders.uint64(f.value)
+      }
+      if (f.type === wireTypes.I64 && type === 'int') {
+        return decoders.int64(f.value)
+      }
+      if (f.type === wireTypes.I64 && type === 'float') {
+        return decoders.float64(f.value)
+      }
+      if (f.type === wireTypes.I32 && type === 'uint') {
+        return decoders.uint32(f.value)
+      }
+      if (f.type === wireTypes.I32 && type === 'int') {
+        return decoders.int32(f.value)
+      }
+      if (f.type === wireTypes.I32 && type === 'float') {
+        return decoders.float32(f.value)
+      }
+    }
+  }
+
+  if (type === 'bytes') {
+    valuePuller = f => f.value
+  }
 
   if (type === 'string') {
     valuePuller = f => decoders.string(f.value)
@@ -94,6 +131,7 @@ export function query (tree, path, choices = {}, prefix = '') {
     valuePuller = f => decoders.packedInt64(f.value)
   }
 
+  // apply a value-transformer to every field that has the value the user wants
   return current.filter(c => c.index === targetField).map(valuePuller)
 }
 
