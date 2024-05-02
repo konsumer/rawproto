@@ -1,5 +1,6 @@
 node_modules
 *.log
 .DS_Store
-test/demo.pb
 /dist/
+*.blob
+/releases/

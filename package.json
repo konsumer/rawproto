@@ -1,25 +1,34 @@
 {
   "name": "rawproto",
-  "version": "0.7.15",
+  "version": "0.8.0",
   "description": "Guess structure of protobuf binary from raw data",
   "type": "module",
-  "source": "./index.js",
-  "exports": "./dist/rawproto.cjs",
+  "source": "./src/index.js",
+  "exports": {
+    "require": "./dist/rawproto.cjs",
+    "default": "./dist/rawproto.modern.js"
+  },
   "main": "./dist/rawproto.cjs",
   "module": "./dist/rawproto.module.js",
   "unpkg": "./dist/rawproto.umd.js",
   "bin": {
-    "rawproto": "rawproto.cjs"
+    "rawproto": "rawproto_cli.cjs"
   },
   "dependencies": {
-    "protobufjs": "^6.11.3",
-    "yargs": "^16.2.0"
+    "get-stdin": "^9.0.0",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "microbundle": "^0.15.1",
+    "vitest": "^1.5.3"
   },
   "scripts": {
     "test": "vitest run --globals --reporter verbose",
+    "test:watch": "vitest --globals --reporter verbose --ui",
     "prepublishOnly": "npm run build",
     "build": "microbundle",
-    "release": "pkg rawproto.cjs --out-path ./dist/release"
+    "release:blob": "npm run build && NODE_NO_WARNINGS=1 node --experimental-sea-config sea-config.json",
+    "release:mac": "mkdir -p releases/mac && npm run release:blob && cp $(command -v node) releases/mac/rawproto && chmod 755 releases/mac/rawproto && codesign --remove-signature releases/mac/rawproto && npx -y postject@latest releases/mac/rawproto NODE_SEA_BLOB rawproto.blob --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2 --macho-segment-name NODE_SEA && codesign --sign - releases/mac/rawproto"
   },
   "repository": {
     "type": "git",
@@ -37,14 +46,8 @@
   "bugs": {
     "url": "https://github.com/konsumer/rawproto/issues"
   },
-  "homepage": "https://github.com/konsumer/rawproto#readme",
+  "homepage": "https://rawproto.konsumer.js.org",
   "files": [
-    "dist/**/*"
-  ],
-  "devDependencies": {
-    "hexy": "^0.3.4",
-    "microbundle": "^0.15.1",
-    "pkg": "^5.8.1",
-    "vitest": "^0.30.1"
-  }
+    "dist/*"
+  ]
 }
