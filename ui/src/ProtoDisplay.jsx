@@ -21,9 +21,9 @@ export function SelectType ({ type, renderType, sub, onChange }) {
 
 export function ProtoField ({ index, type, sub, renderType, value, path, onTypeChange }) {
   const demoSubTree = [
-    { path: '3.1', index: 1, type: 0, renderType: 'uint', value: 1 },
-    { path: '3.2', index: 2, type: 0, renderType: 'uint', value: 2 },
-    { path: '3.3', index: 3, type: 0, renderType: 'uint', value: 3 }
+    { index: 1, type: 0, renderType: 'uint', value: 1 },
+    { index: 2, type: 0, renderType: 'uint', value: 2 },
+    { index: 3, type: 0, renderType: 'uint', value: 3 }
   ]
   return (
     <li key={index}>

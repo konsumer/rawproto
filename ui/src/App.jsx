@@ -5,12 +5,12 @@ import ErrorBoundary from './ErrorBoundary.jsx'
 const getFields = bytes => {
   // bytes will get turned into this later
   const fields = [
-    { path: '1', index: 1, type: 2, renderType: 'string', value: new Uint8Array([0x73, 0x6f, 0x6d, 0x65, 0x20, 0x74, 0x65, 0x78, 0x74]) },
-    { path: '2', index: 2, type: 2, renderType: 'bytes', value: new Uint8Array([0x73, 0x6f, 0x6d, 0x65, 0x20, 0x74, 0x65, 0x78, 0x74]) },
-    { path: '3', index: 3, type: 2, renderType: 'sub', sub: true, value: new Uint8Array([0x08, 0x96, 0x01]) },
-    { path: '4', index: 4, type: 5, renderType: 'int', value: new Uint8Array([0x00, 0x00, 0x00, 0xff]) },
-    { path: '5', index: 5, type: 1, renderType: 'int', value: new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff]) },
-    { path: '6', index: 6, type: 0, renderType: 'uint', value: 50 }
+    { index: 1, type: 2, renderType: 'string', value: new Uint8Array([0x73, 0x6f, 0x6d, 0x65, 0x20, 0x74, 0x65, 0x78, 0x74]) },
+    { index: 2, type: 2, renderType: 'bytes', value: new Uint8Array([0x73, 0x6f, 0x6d, 0x65, 0x20, 0x74, 0x65, 0x78, 0x74]) },
+    { index: 3, type: 2, renderType: 'sub', sub: true, value: new Uint8Array([0x08, 0x96, 0x01]) },
+    { index: 4, type: 5, renderType: 'int', value: new Uint8Array([0x00, 0x00, 0x00, 0xff]) },
+    { index: 5, type: 1, renderType: 'int', value: new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff]) },
+    { index: 6, type: 0, renderType: 'uint', value: 50 }
   ]
   return fields
 }

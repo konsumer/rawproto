@@ -27,6 +27,7 @@
     "test:watch": "vitest --globals --reporter verbose --ui",
     "prepublishOnly": "npm run build",
     "build": "microbundle",
+    "start": "cd ui && npm start",
     "release:blob": "npm run build && NODE_NO_WARNINGS=1 node --experimental-sea-config sea-config.json",
     "release:mac": "mkdir -p releases/mac && npm run release:blob && cp $(command -v node) releases/mac/rawproto && chmod 755 releases/mac/rawproto && codesign --remove-signature releases/mac/rawproto && npx -y postject@latest releases/mac/rawproto NODE_SEA_BLOB rawproto.blob --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2 --macho-segment-name NODE_SEA && codesign --sign - releases/mac/rawproto"
   },

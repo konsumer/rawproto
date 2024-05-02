@@ -75,7 +75,26 @@ export function query (tree, path, choices = {}, prefix = '') {
       .reduce((a, c) => [...a, ...c], [])
   }
 
-  return current.filter(c => c.index === targetField)
+  // works for varint & len:bytes
+  let valuePuller = f => f.value
+
+  if (type === 'string') {
+    valuePuller = f => decoders.string(f.value)
+  }
+
+  if (type === 'packedvarint') {
+    valuePuller = f => decoders.packedIntVar(f.value)
+  }
+
+  if (type === 'packedint32') {
+    valuePuller = f => decoders.packedInt32(f.value)
+  }
+
+  if (type === 'packedint64') {
+    valuePuller = f => decoders.packedInt64(f.value)
+  }
+
+  return current.filter(c => c.index === targetField).map(valuePuller)
 }
 
 export class Reader {
