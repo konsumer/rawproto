@@ -33,7 +33,7 @@ test('Get title with query', () => {
   expect(query(appTree, '5:string').pop()).toEqual('Hearthstone')
 })
 
-test('field with groups (media)', () => {
+test('field with groups (manual sub-parse)', () => {
   // this gets more but is till not right
   const medias = query(appTree, '10:bytes').map((i) => {
     const t = new Reader(i).readMessage()
@@ -60,11 +60,39 @@ test('field with groups (media)', () => {
   expect(videoThumbs).toEqual([
     'https://i.ytimg.com/vi/XT7YEb9_Muw/hqdefault.jpg'
   ])
+})
 
-  /*
-  // TODO: I should be able to query like this, but it does not find the repeats, correctly. Maybe should fix later
-  const types = query(appTree, '10.1:var')
+test('field with groups (using plain query)', () => {
+  const types = query(appTree, '10.1:uint')
   const urls = query(appTree, '10.5:string')
-  console.log(types, urls)
-  */
+  expect(types.length).toEqual(urls.length)
+
+  // sort media by types
+  const { icon, screenshots, videos, videoThumbs } = types.reduce((a, t, i) => {
+    if (t === 4) {
+      a.icon = urls[i]
+    }
+    if (t === 1) {
+      a.screenshots.push(urls[i])
+    }
+    if (t === 3) {
+      a.videos.push(urls[i])
+    }
+    if (t === 13) {
+      a.videoThumbs.push(urls[i])
+    }
+    return a
+  }, { screenshots: [], videos: [], videoThumbs: [] })
+
+  expect(icon).toEqual(
+    'https://play-lh.googleusercontent.com/qTt7JkhZ-U0kevENyTChyUijNUEctA3T5fh7cm8yzKUG0UAnMUgOMpG_9Ln7D24NbQ'
+  )
+  expect(screenshots.length).toEqual(6)
+  expect(screenshots[0]).toEqual(
+    'https://play-lh.googleusercontent.com/m-S0SqOv428DZcm46NJlyv0pffYpfsNjWz6iyf9LVM1TCWbzWs3clWaugjfzXXnCTbY'
+  )
+  expect(videos).toEqual(['https://youtu.be/XT7YEb9_Muw'])
+  expect(videoThumbs).toEqual([
+    'https://i.ytimg.com/vi/XT7YEb9_Muw/hqdefault.jpg'
+  ])
 })
