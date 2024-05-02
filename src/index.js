@@ -45,7 +45,9 @@ export function query (tree, path, choices = {}, prefix = '') {
       prefix = choices
       choices = {}
     } else {
-      throw new Error('Usage: query(tree, choices, "X.X.X") or query(tree, "X.X.X:type")')
+      throw new Error(
+        'Usage: query(tree, choices, "X.X.X") or query(tree, "X.X.X:type")'
+      )
     }
   }
 
@@ -65,74 +67,21 @@ export function query (tree, path, choices = {}, prefix = '') {
   // now type is the type of value to pull, and p is the path, from the top
 
   let current = tree
-  const pp = p.split('.').map(i => parseInt(i))
+  const pp = p.split('.').map((i) => parseInt(i))
   const targetField = parseInt(pp.pop())
 
   // this will give you just the messages that the query asked for
   for (const pathIndex of pp) {
     current = current
-      .filter(c => c.index === parseInt(pathIndex))
-      .map(c => new Reader(c.value).readMessage())
+      .filter((c) => c.index === parseInt(pathIndex))
+      .map((c) => new Reader(c.value).readMessage())
       .reduce((a, c) => [...a, ...c], [])
   }
 
-  // raw
-  let valuePuller = f => f
-
-  if (['int', 'uint', 'float', 'bool'].includes(type)) {
-    valuePuller = f => {
-      if (f.type === wireTypes.VARINT) {
-        if (type === 'uint' || type === 'int') { // I don't really support signed ints, but the user may be mistaken here (using int for VARINT)
-          return f.value
-        }
-        if (type === 'bool') {
-          return !!f.value
-        }
-      }
-      // numeric types that require a view
-      if (f.type === wireTypes.I64 && type === 'uint') {
-        return decoders.uint64(f.value)
-      }
-      if (f.type === wireTypes.I64 && type === 'int') {
-        return decoders.int64(f.value)
-      }
-      if (f.type === wireTypes.I64 && type === 'float') {
-        return decoders.float64(f.value)
-      }
-      if (f.type === wireTypes.I32 && type === 'uint') {
-        return decoders.uint32(f.value)
-      }
-      if (f.type === wireTypes.I32 && type === 'int') {
-        return decoders.int32(f.value)
-      }
-      if (f.type === wireTypes.I32 && type === 'float') {
-        return decoders.float32(f.value)
-      }
-    }
-  }
-
-  if (type === 'bytes') {
-    valuePuller = f => f.value
-  }
-
-  if (type === 'string') {
-    valuePuller = f => decoders.string(f.value)
-  }
-
-  if (type === 'packedvarint') {
-    valuePuller = f => decoders.packedIntVar(f.value)
-  }
-
-  if (type === 'packedint32') {
-    valuePuller = f => decoders.packedInt32(f.value)
-  }
-
-  if (type === 'packedint64') {
-    valuePuller = f => decoders.packedInt64(f.value)
-  }
-
   // apply a value-transformer to every field that has the value the user wants
-  return current.filter(c => c.index === targetField).map(valuePuller)
+  return current
+    .filter((c) => c.index === targetField)
+    .map((f) => decoders.getValue(f, type))
 }
 
 export class Reader {
@@ -159,7 +108,7 @@ export class Reader {
 
   // read a portion of the buffer, at offset
   readBuffer (length) {
-    if ((this.offset + length) > this.buffer.length) {
+    if (this.offset + length > this.buffer.length) {
       throw new Error(`Buffer overflow while reading buffer ${length} bytes`)
     }
     const result = this.buffer.slice(this.offset, this.offset + length)
@@ -167,23 +116,15 @@ export class Reader {
     return result
   }
 
-  // read a group at current offset
+  // read a group for index number (from current offset)
   readGroup (index) {
     const offsetStart = this.offset
     let indexType = parseInt(this.readVarInt())
     let type = indexType & 0b111
-    let foundIndex = index
-
     while (type !== wireTypes.EGROUP) {
       indexType = parseInt(this.readVarInt())
       type = indexType & 0b111
-      foundIndex = indexType >> 3
     }
-
-    if (foundIndex !== index) {
-      throw new Error(`Group index ${foundIndex} should match ${index}`)
-    }
-
     return this.buffer.slice(offsetStart, this.offset)
   }
 
@@ -211,6 +152,9 @@ export class Reader {
         newrec.value = this.readGroup(index)
         newrec.pos.push(this.offset)
         return newrec
+      case wireTypes.EGROUP:
+        // I don't think think I should hit this one
+        return
       case wireTypes.I32:
         newrec.value = this.readBuffer(4)
         newrec.pos.push(this.offset)

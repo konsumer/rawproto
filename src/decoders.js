@@ -1,45 +1,72 @@
-import Reader from './index'
+import Reader, { wireTypes } from './index'
 
 // get string representation of a field
 export function display ({ index, type, sub, renderType, value }) {
+  const v = getValue({ index, type, sub, renderType, value }, renderType)
   if (renderType === 'raw') {
-    return JSON.stringify({ index, type, sub, renderType, value })
+    return JSON.stringify(v)
   }
   if (renderType === 'bytes') {
-    return bytes(value)
+    return bytes(v)
   }
-  if (type === 0) {
-    return value.toString()
-  }
-  if (renderType === 'string') {
-    return string(value)
-  }
-  if ([1, 5].includes(type)) {
-    if (!renderType) {
-      renderType = 'int'
-    }
+  return v.toString()
+}
 
-    if (renderType === 'int') {
-      if (type === 5) {
-        return int32(value).toString()
-      } else {
-        return int64(value).toString()
+// this is a wrapper around a field to just get the value form field/renderType
+// this is used in query & display & a few other places
+export const getValue = (field, type) => {
+  if (type === 'raw') {
+    return field
+  }
+
+  if (['int', 'uint', 'float', 'bool'].includes(type)) {
+    if (field.type === wireTypes.VARINT) {
+      if (type === 'uint' || type === 'int') { // I don't really support signed ints, but the user may be mistaken here (using int for VARINT)
+        return field.value
+      }
+      if (type === 'bool') {
+        return !!field.value
       }
     }
-    if (renderType === 'uint') {
-      if (type === 5) {
-        return uint32(value).toString()
-      } else {
-        return uint64(value).toString()
-      }
+    // numeric types that require a view
+    if (field.type === wireTypes.I64 && type === 'uint') {
+      return uint64(field.value)
     }
-    if (renderType === 'float') {
-      if (type === 5) {
-        return float32(value).toString()
-      } else {
-        return float64(value).toString()
-      }
+    if (field.type === wireTypes.I64 && type === 'int') {
+      return int64(field.value)
     }
+    if (field.type === wireTypes.I64 && type === 'float') {
+      return float64(field.value)
+    }
+    if (field.type === wireTypes.I32 && type === 'uint') {
+      return uint32(field.value)
+    }
+    if (field.type === wireTypes.I32 && type === 'int') {
+      return int32(field.value)
+    }
+    if (field.type === wireTypes.I32 && type === 'float') {
+      return float32(field.value)
+    }
+  }
+
+  if (type === 'bytes') {
+    return field.value
+  }
+
+  if (type === 'string') {
+    return string(field.value)
+  }
+
+  if (type === 'packedvarint') {
+    return packedIntVar(field.value)
+  }
+
+  if (type === 'packedint32') {
+    return packedInt32(field.value)
+  }
+
+  if (type === 'packedint64') {
+    return packedInt64(field.value)
   }
 }
 
@@ -48,14 +75,25 @@ const dec = new TextDecoder()
 // hex string of bytes
 export const bytes = b => [...b].map(c => c.toString(16).padStart(2, '0')).join(' ')
 
-// get teh string-value of a buffer
+// get the string-value of a buffer
 export const string = b => dec.decode(b)
 
+// get the Unsigned 64-bit Integer value of a 8-byte buffer
 export const uint64 = b => (new DataView(b.buffer)).getBigUInt64(0, true)
+
+// get the Signed 64-bit Integer value of a 8-byte buffer
 export const int64 = b => (new DataView(b.buffer)).getBigInt64(0, true)
+
+// get the 64-bit Decimal value of a 8-byte buffer
 export const float64 = b => (new DataView(b.buffer)).getFloat64(0, true)
+
+// get the Unsigned 32-bit Integer value of a 4-byte buffer
 export const uint32 = b => (new DataView(b.buffer)).getUInt32(0, true)
+
+// get the Signed 32-bit Integer value of a 4-byte buffer
 export const int32 = b => (new DataView(b.buffer)).getInt32(0, true)
+
+// get the 32-bit Decimal value of a 4-byte buffer
 export const float32 = b => (new DataView(b.buffer)).getFloat32(0, true)
 
 export const packedIntVar = b => {
