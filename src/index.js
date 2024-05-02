@@ -163,6 +163,11 @@ export class Reader {
       case wireTypes.LEN:
         newrec.value = this.readBuffer(this.readVarInt())
         newrec.pos.push(this.offset)
+        // this checks if sub-image is possible
+        try {
+          new Reader(newrec.value).readMessage()
+          newrec.sub = true
+        } catch (e) {}
         return newrec
       case wireTypes.SGROUP:
         newrec.value = this.readGroup(index)

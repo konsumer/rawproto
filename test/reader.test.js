@@ -3,7 +3,7 @@
 // these are very manual tests of basic reader stuff
 // you should see query for better examples
 
-import Reader, { decoders } from '../src/index.js'
+import Reader, { decoders } from 'rawproto'
 
 test('A Simple Message', () => {
   /*

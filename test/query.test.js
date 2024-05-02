@@ -2,7 +2,7 @@
 
 /* global test expect */
 
-import Reader, { query } from '../src/index.js'
+import Reader, { query } from 'rawproto'
 
 test('A Simple Message', () => {
   /*
