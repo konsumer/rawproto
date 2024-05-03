@@ -16,7 +16,7 @@ If you just want the CLI, and don't use node, you can also find standalone build
 
 ```js
 import { readFile } from 'fs/promises'
-import RawProto from 'rawproto'
+import RawProto, { query } from 'rawproto'
 
 // load proto & override "best guess" of types for a single field
 const proto = new RawProto(await readFile('data.pb'), { '1.2.4.10.5': 'string' })
@@ -27,18 +27,22 @@ console.log(proto.query('1.2.4.10.5:bytes'))
 // same thing, but using type-mapping
 console.log(proto.query('1.2.4.10.5'))
 
-// guess to decode as JS object
+// You can also cache your tree, reuse it in multiple queries, and use a prefix
+console.log(query(proto, '5', '1.2.4.10'))
+console.log(query(proto, '1', '1.2.4.10'))
+
+// guess to decode as JS object, also works with prefix
 console.log(proto.toJS())
 
-// guess to generate .proto file string
+// guess to generate .proto file string, also works with prefix
 console.log(proto.toProto())
 
 // walk over messages recursively, calling your callback.
 const mydata = proto.walk((path, wireType, data) => {
   console.log({ path, wireType, data })
 
-  // just do whatever it normally does
-  return proto.walkerDefault(path, wireType, data)
+  // just do whatever it normally does to make JS-object
+  return proto.walkerJS(path, wireType, data)
 })
 ```
 

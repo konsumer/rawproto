@@ -193,16 +193,24 @@ export class RawProto {
     return out
   }
 
-  walk(callback) {
+  walk(callback, prefix = '') {
     throw new Error('TODO')
   }
 
-  toJS(path = '') {
+  walkerJS(prefix, wireType, data) {
     throw new Error('TODO')
   }
 
-  toProto(path = '') {
+  walkerProto(prefix, wireType, data) {
     throw new Error('TODO')
+  }
+
+  toJS(prefix = '') {
+    return this.walk(this.walkerJS.bind(this), prefix)
+  }
+
+  toProto(prefix = '') {
+    return this.walk(this.walkerProto.bind(this), prefix)
   }
 }
 
