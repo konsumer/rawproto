@@ -13,7 +13,7 @@ function ProtoField(field) {
   const [sub, setSub] = useState()
 
   useEffect(() => {
-    if (field.type === 2) {
+    if (field.type === wireTypes.LEN || field.type === wireTypes.SGROUP) {
       // try to parse it
       try {
         const s = new RawProto(field.value).readMessage()
