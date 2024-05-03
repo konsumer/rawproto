@@ -4,3 +4,7 @@ node_modules
 *.bin
 *.blob
 /releases/
+/ui/
+/test/
+sea-config.json
+.prettierrc
