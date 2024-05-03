@@ -46,5 +46,5 @@ test.skip('Packed Repeated Fields', () => {
     6: {3 270 86942}
   */
   const j = new RawProto([0x32, 0x06, 0x03, 0x8e, 0x02, 0x9e, 0xa7, 0x05], { 6: 'packedvarint' }).toJS()
-  expect(j).toEqual({ 3: [{ 1: [150] }] })
+  expect(j).toEqual({ 6: [3, 270, 86942] })
 })
