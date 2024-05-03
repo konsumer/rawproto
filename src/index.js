@@ -54,10 +54,10 @@ export function query(tree, path, choices = {}, prefix = '') {
 
   // this allows you to override type in path, but also will apply type-choice & prefix
   let [p, type] = path.split(':')
+  if (prefix) {
+    p = `${prefix}.${p}`
+  }
   if (!type) {
-    if (prefix) {
-      p = `${prefix}.${p}`
-    }
     if (choices[p]) {
       type = choices[p]
     } else {
