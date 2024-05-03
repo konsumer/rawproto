@@ -91,7 +91,11 @@ export class RawProto {
   }
 
   query(path, choices, prefix = '') {
-    this.tree ||= this.readMessage()
+    if (!this.tree) {
+      this.offset = 0
+      this.tree = this.readMessage()
+      this.offset = 0
+    }
     return query(this.tree, path, choices || this.choices || {}, prefix)
   }
 
@@ -155,10 +159,10 @@ export class RawProto {
         newrec.value = this.readBuffer(this.readVarInt())
         newrec.pos.push(this.offset)
         // this checks if sub-message is possible
-        try {
-          newrec.sub = new RawProto(newrec.value).readMessage()
-          newrec.renderType = 'sub'
-        } catch (e) {}
+        // try {
+        //   newrec.sub = new RawProto(newrec.value).readMessage()
+        //   newrec.renderType = 'sub'
+        // } catch (e) {}
         return newrec
       case wireTypes.SGROUP:
         newrec.value = this.readGroup(index)
