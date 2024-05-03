@@ -4,6 +4,9 @@
 
 Guess structure of protobuf binary from raw data, query binary protobuf without the schema, and output guessed JSON or schema, some CLI utils, and a web tool for exploring raw protobuf.
 
+You can explore your proto binary data [here](https://konsumer.js.org/rawproto/). Use it to view, generate proto/json files, or select how to parse fields.
+
+
 ## installation
 
 `npm i rawproto` will add this to your project.
