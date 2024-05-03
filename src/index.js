@@ -90,13 +90,13 @@ export class RawProto {
     this.choices = choices
   }
 
-  query(path, choices, prefix = '') {
+  query(path, prefix = '') {
     if (!this.tree) {
       this.offset = 0
       this.tree = this.readMessage()
       this.offset = 0
     }
-    return query(this.tree, path, choices || this.choices || {}, prefix)
+    return query(this.tree, path, this.choices, prefix)
   }
 
   // read a VARINT from buffer, at offset

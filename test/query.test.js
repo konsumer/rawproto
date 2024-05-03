@@ -12,14 +12,6 @@ test('A Simple Message', () => {
   expect(query(tree, '1:uint')).toEqual([150])
 })
 
-test('A Simple Message: RawProto.query', () => {
-  /*
-    1: 150
-  */
-  const tree = new RawProto([0x08, 0x96, 0x01])
-  expect(tree.query('1:uint')).toEqual([150])
-})
-
 test('A Simple Message: choices', () => {
   /*
     1: 150
@@ -34,6 +26,25 @@ test('A Simple Message: choices & prefix', () => {
   */
   const tree = new RawProto([0x1a, 0x03, 0x08, 0x96, 0x01]).readMessage()
   expect(query(tree, '1', { 3.1: 'uint' }, '3')).toEqual([150])
+})
+
+// test same stuff using RawProto.query
+test('A Simple Message: RawProto.query', () => {
+  /*
+    3: {1: 150}
+  */
+  const tree = new RawProto([0x1a, 0x03, 0x08, 0x96, 0x01], { 3.1: 'uint' })
+  // tpye in query
+  expect(tree.query('3.1:uint')).toEqual([150])
+
+  // use choices
+  expect(tree.query('3.1')).toEqual([150])
+
+  // use prefix
+  // expect(tree.query('1:uint', '3')).toEqual([150])
+
+  // use choices & prefix
+  expect(tree.query('1', '3')).toEqual([150])
 })
 
 test('Length-Delimited Records', () => {
