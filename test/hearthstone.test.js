@@ -13,8 +13,8 @@ import { wireTypes } from 'src/decoders'
 const pb = await readFile(join(dirname(fileURLToPath(import.meta.url)), 'hearthstone.bin'))
 const tree = new RawProto(pb).readMessage()
 
-// since all is off of 1.2.4, this will optimize to pull from there, "raw" is default type
-const appTree = new RawProto(query(tree, '1.2.4:bytes').pop()).readMessage()
+// since all is off of 1.2.4, this will optimize to pull from there
+const appTree = query(tree, '1.2.4:sub').pop()
 
 test('Get bytes of a sub-message with query', () => {
   const matches = query(tree, '1.2.4:bytes')
