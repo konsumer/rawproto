@@ -145,6 +145,7 @@ export const int32 = (b) => new DataView(b.buffer).getInt32(0, true)
 // get the 32-bit Decimal value of a 4-byte buffer
 export const float32 = (b) => new DataView(b.buffer).getFloat32(0, true)
 
+// decode a buffer of packed varints
 export const packedIntVar = (b) => {
   const out = []
   const r = new RawProto(b)
@@ -154,6 +155,7 @@ export const packedIntVar = (b) => {
   return out
 }
 
+// decode a buffer of packed int32's
 export const packedInt32 = (b) => {
   const out = []
   const d = new DataView(b.buffer)
@@ -165,6 +167,7 @@ export const packedInt32 = (b) => {
   return out
 }
 
+// decode a buffer of packed int64's
 export const packedInt64 = (b) => {
   const out = []
   const d = new DataView(b.buffer)
