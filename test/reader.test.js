@@ -28,7 +28,7 @@ test('Length-Delimited Records', () => {
   expect(decoders.string(tree[0].value)).toEqual('testing')
 })
 
-test('Submessages', () => {
+test('Traverse Submessages', () => {
   /*
     3: {1: 150}
   */

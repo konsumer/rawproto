@@ -12,7 +12,7 @@ test('A Simple Message', () => {
   expect(j).toEqual({ 1: [150] })
 })
 
-test('Submessages', () => {
+test('Traverse Submessages', () => {
   /*
     3: {1: 150}
   */

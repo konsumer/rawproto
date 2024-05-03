@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url'
 import { join, dirname } from 'path'
 import { readFile } from 'fs/promises'
 import RawProto, { query } from 'rawproto'
+import { wireTypes } from 'src/decoders'
 
 // build an initial array of the data I want to look at
 // do this, and you can use getPath() to get values
@@ -40,6 +41,7 @@ test('field with groups (manual sub-parse)', () => {
   })
   expect(medias.length).toEqual(10)
 
+  // sort media by types
   const icon = medias.find((m) => m.type === 4).url
   const screenshots = medias.filter((m) => m.type === 1).map((m) => m.url)
   const videos = medias.filter((m) => m.type === 3).map((m) => m.url)
@@ -60,17 +62,20 @@ test('field with groups (using plain query)', () => {
   // sort media by types
   const { icon, screenshots, videos, videoThumbs } = types.reduce(
     (a, t, i) => {
-      if (t === 4) {
-        a.icon = urls[i]
-      }
-      if (t === 1) {
-        a.screenshots.push(urls[i])
-      }
-      if (t === 3) {
-        a.videos.push(urls[i])
-      }
-      if (t === 13) {
-        a.videoThumbs.push(urls[i])
+      // google's type-enum
+      switch (t) {
+        case 4:
+          a.icon = urls[i]
+          break
+        case 1:
+          a.screenshots.push(urls[i])
+          break
+        case 3:
+          a.videos.push(urls[i])
+          break
+        case 13:
+          a.videoThumbs.push(urls[i])
+          break
       }
       return a
     },
