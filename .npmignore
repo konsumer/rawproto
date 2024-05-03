@@ -1,4 +1,11 @@
 node_modules
 *.log
 .DS_Store
-test/demo.pb
+*.bin
+*.blob
+/releases/
+/ui/
+/test/
+sea-config.json
+.prettierrc
+/coverage/
