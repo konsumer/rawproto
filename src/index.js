@@ -156,7 +156,7 @@ export class RawProto {
         newrec.pos.push(this.offset)
         // this checks if sub-message is possible
         try {
-          newrec.sub = new Reader(newrec.value).readMessage()
+          newrec.sub = new RawProto(newrec.value).readMessage()
           newrec.renderType = 'sub'
         } catch (e) {}
         return newrec

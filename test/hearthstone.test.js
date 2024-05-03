@@ -5,15 +5,15 @@
 import { fileURLToPath } from 'url'
 import { join, dirname } from 'path'
 import { readFile } from 'fs/promises'
-import Reader, { query } from 'rawproto'
+import RawProto, { query } from 'rawproto'
 
 // build an initial array of the data I want to look at
 // do this, and you can use getPath() to get values
 const pb = await readFile(join(dirname(fileURLToPath(import.meta.url)), 'hearthstone.bin'))
-const tree = new Reader(pb).readMessage()
+const tree = new RawProto(pb).readMessage()
 
 // since all is off of 1.2.4, this will optimize to pull from there, "raw" is default type
-const appTree = new Reader(query(tree, '1.2.4:bytes').pop()).readMessage()
+const appTree = new RawProto(query(tree, '1.2.4:bytes').pop()).readMessage()
 
 test('Get bytes of a sub-message with query', () => {
   const matches = query(tree, '1.2.4:bytes')
@@ -32,7 +32,7 @@ test('Get title with query', () => {
 test('field with groups (manual sub-parse)', () => {
   // this gets more but is till not right
   const medias = query(appTree, '10:bytes').map((i) => {
-    const t = new Reader(i).readMessage()
+    const t = new RawProto(i).readMessage()
     return {
       type: query(t, '1:uint').pop(),
       url: query(t, '5:string').pop()
