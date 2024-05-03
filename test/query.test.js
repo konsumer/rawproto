@@ -82,3 +82,21 @@ test('Packed Repeated Fields', () => {
   const tree = new RawProto([0x32, 0x06, 0x03, 0x8e, 0x02, 0x9e, 0xa7, 0x05]).readMessage()
   expect(query(tree, '6:packedvarint')).toEqual([[3, 270, 86942]])
 })
+
+// Here are some other type-tests
+
+test('Submessage as bytes', () => {
+  /*
+    3: {1: 150}
+  */
+  const tree = new RawProto([0x1a, 0x03, 0x08, 0x96, 0x01]).readMessage()
+  expect(query(tree, '3:bytes')).toEqual([new Uint8Array([8, 150, 1])])
+})
+
+test('Submessage as sub', () => {
+  /*
+    3: {1: 150}
+  */
+  const tree = new RawProto([0x1a, 0x03, 0x08, 0x96, 0x01]).readMessage()
+  expect(query(tree, '3:sub')).toEqual([[{ index: 1, path: '1', pos: [1, 3], renderType: 'int', value: 150, type: 0 }]])
+})

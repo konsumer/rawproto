@@ -98,6 +98,10 @@ export const getValue = (field, type) => {
     return field.value
   }
 
+  if (type === 'sub') {
+    return new RawProto(field.value).readMessage()
+  }
+
   if (type === 'string') {
     return string(field.value)
   }
