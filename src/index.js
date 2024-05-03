@@ -75,7 +75,7 @@ export function query(tree, path, choices = {}, prefix = '') {
   for (const pathIndex of pp) {
     current = current
       .filter((c) => c.index === parseInt(pathIndex))
-      .map((c) => new Reader(c.value).readMessage())
+      .map((c) => new RawProto(c.value).readMessage())
       .reduce((a, c) => [...a, ...c], [])
   }
 
@@ -83,10 +83,16 @@ export function query(tree, path, choices = {}, prefix = '') {
   return current.filter((c) => c.index === targetField).map((f) => decoders.getValue(f, type))
 }
 
-export class Reader {
-  constructor(buffer) {
+export class RawProto {
+  constructor(buffer, choices = {}) {
     this.buffer = new Uint8Array(buffer)
     this.offset = 0
+    this.choices = choices
+  }
+
+  query(path, choices, prefix = '') {
+    this.tree ||= this.readMessage()
+    return query(this.tree, path, choices || this.choices || {}, prefix)
   }
 
   // read a VARINT from buffer, at offset
@@ -182,6 +188,18 @@ export class Reader {
     }
     return out
   }
+
+  walk(callback) {
+    throw new Error('TODO')
+  }
+
+  toJS(path = '') {
+    throw new Error('TODO')
+  }
+
+  toProto(path = '') {
+    throw new Error('TODO')
+  }
 }
 
-export default Reader
+export default RawProto
