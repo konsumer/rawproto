@@ -17,10 +17,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           cache: 'npm'
-      - name: Setup
-        run: cd ui && npm ci
       - name: Build Site
-        run: npm run build
+        run: cd ui && npm ci && npm run build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
