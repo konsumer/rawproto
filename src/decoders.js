@@ -20,7 +20,7 @@ export const wireLabels = {
 export const wireMap = {
   0: ['int', 'bool', 'raw'],
   1: ['int', 'uint', 'bytes', 'float', 'raw'],
-  2: ['string', 'bytes', 'sub', 'packedvarint', 'packedint32', 'packedint64', 'raw'],
+  2: ['bytes', 'string', 'sub', 'packedvarint', 'packedint32', 'packedint64', 'raw'],
   5: ['int', 'uint', 'bytes', 'float', 'raw']
 }
 

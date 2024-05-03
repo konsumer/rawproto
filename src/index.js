@@ -55,15 +55,6 @@ export class RawProto {
     this.choices = choices
   }
 
-  query(path, prefix = '') {
-    if (!this.tree) {
-      this.offset = 0
-      this.tree = this.readMessage()
-      this.offset = 0
-    }
-    return query(this.tree, path, this.choices, prefix)
-  }
-
   // read a VARINT from buffer, at offset
   readVarInt() {
     let result = 0
@@ -102,15 +93,23 @@ export class RawProto {
     return this.buffer.slice(offsetStart, this.offset)
   }
 
-  handleField(type, index) {
-    // choose first renderType as default
-    // TODO: handle choices
-    let renderType = 'raw'
-    if (wireMap[type]) {
-      renderType = wireMap[type][0]
+  handleField(type, index, prefix = '') {
+    const path = prefix ? `${prefix}.${index}` : index.toString()
+
+    // choose first renderType as default, if chjoice not set
+    let renderType = this.choices[path]
+    if (!renderType) {
+      if (wireMap[type]) {
+        renderType = wireMap[type][0]
+      }
     }
 
-    const newrec = { type, index, pos: [this.offset], renderType }
+    const newrec = { path, type, index, pos: [this.offset], renderType }
+
+    if (type === wireTypes.SGROUP || type === wireTypes.EGROUP || type > wireTypes.I32) {
+      delete newrec.renderType
+    }
+
     switch (type) {
       case wireTypes.VARINT:
         newrec.value = this.readVarInt()
@@ -122,14 +121,11 @@ export class RawProto {
         return newrec
       case wireTypes.LEN:
         newrec.value = this.readBuffer(this.readVarInt())
+        newrec.value = decoders.getValue(newrec, renderType)
         newrec.pos.push(this.offset)
-        // this checks if sub-message is possible
-        // try {
-        //   newrec.sub = new RawProto(newrec.value).readMessage()
-        //   newrec.renderType = 'sub'
-        // } catch (e) {}
         return newrec
       case wireTypes.SGROUP:
+        // just get bytes
         newrec.value = this.readGroup(index)
         newrec.pos.push(this.offset)
         return newrec
@@ -146,17 +142,26 @@ export class RawProto {
   }
 
   // read 1 level of LEN message field
-  readMessage() {
+  readMessage(prefix = '') {
     // TODO: use this.choices to insert renderType
     const out = []
     while (this.offset < this.buffer.length) {
       const indexType = parseInt(this.readVarInt())
-      const r = this.handleField(indexType & 0b111, indexType >> 3)
+      const r = this.handleField(indexType & 0b111, indexType >> 3, prefix)
       if (r) {
         out.push(r)
       }
     }
     return out
+  }
+
+  // These are wrapopers around other utils that could be used seperately
+
+  query(path, prefix = '') {
+    this.offset = 0
+    this.tree ||= this.readMessage(prefix)
+    this.offset = 0
+    return query(this.tree, path, this.choices, prefix)
   }
 
   walk(callback, prefix = '') {
@@ -184,12 +189,14 @@ export const removePathPrefix = (choices = {}, path = '') =>
 
 // walk over a tree recursivley calling callback on each item, each field is outputted as an array, eah message is an object
 export function walk(reader, callback, prefix = '') {
-  reader.tree ||= reader.readMessage()
+  reader.offset = 0
+  reader.tree ||= reader.readMessage(prefix)
+  reader.offset = 0
   const out = {}
   for (const field of reader.tree) {
     out[field.index] ||= []
-    const f = prefix ? `${prefix}.${field.index}` : field.index
-    out[field.index].push(callback(field, f, reader, callback))
+    const path = prefix ? `${prefix}.${field.index}` : field.index
+    out[field.index].push(callback(field, path, reader, callback))
   }
   return out
 }
@@ -197,8 +204,17 @@ export function walk(reader, callback, prefix = '') {
 // generic walker that will apply default transforms to every field
 export function walkerJS(field, path, reader, callback) {
   if (field.type === wireTypes.LEN) {
-    // TODO: pass choices form original reader
-    return walk(new RawProto(field.value, removePathPrefix(reader.choices, path)), callback, path)
+    try {
+      return walk(new RawProto(field.value, removePathPrefix(reader.choices, path)), callback, path)
+    } catch (e) {
+      // check if it is likely a string
+      for (const b of field.value) {
+        if (b < 32) {
+          return decoders.getValue(field, 'bytes')
+        }
+      }
+      return decoders.getValue(field, 'string')
+    }
   }
   return decoders.getValue(field, field.renderType)
 }

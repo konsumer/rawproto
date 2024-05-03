@@ -55,7 +55,7 @@ test('Length-Delimited Records', () => {
   expect(query(tree, '2:string')).toEqual(['testing'])
 })
 
-test('Submessages', () => {
+test('Traverse Submessages', () => {
   /*
     3: {1: 150}
   */
