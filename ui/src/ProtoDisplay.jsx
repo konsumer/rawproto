@@ -19,7 +19,9 @@ function ProtoField(field) {
   if (sub) {
     return (
       <details>
-        <summary>{field.index}:</summary>
+        <summary>
+          {field.index}: ({parseLabels.sub})
+        </summary>
         <ProtoDisplay fields={sub} />
       </details>
     )
@@ -27,7 +29,7 @@ function ProtoField(field) {
 
   return (
     <div>
-      {field.index}: {decoders.display(field)}
+      {field.index}: ({wireLabels[field.type]} as {parseLabels[field.renderType]}) {decoders.display(field)}
     </div>
   )
 }
