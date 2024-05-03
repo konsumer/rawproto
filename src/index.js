@@ -2,44 +2,9 @@
 
 import * as decoders from './decoders'
 
-export { decoders }
+const { wireTypes, wireLabels, wireMap, parseLabels } = decoders
 
-export const wireTypes = {
-  VARINT: 0, //  int32, int64, uint32, uint64, sint32, sint64, bool, enum
-  I64: 1, // fixed64, sfixed64, double
-  LEN: 2, // string, bytes, embedded messages, packed repeated fields
-  SGROUP: 3, //  group start (deprecated)
-  EGROUP: 4, //  group end (deprecated)
-  I32: 5 // fixed32, sfixed32, float
-}
-
-export const wireLabels = {
-  0: 'Variable-length Integer',
-  1: '64bit Number',
-  2: 'Length-delimited Bytes',
-  5: '32bit Number'
-}
-
-export const wireMap = {
-  0: ['uint', 'bool', 'raw'],
-  1: ['uint', 'int', 'bytes', 'float', 'raw'],
-  2: ['string', 'bytes', 'sub', 'packedvarint', 'packedint32', 'packedint64', 'raw'],
-  5: ['int', 'uint', 'bytes', 'float', 'raw']
-}
-
-export const parseLabels = {
-  int: 'Signed Integer',
-  uint: 'Unsigned Integer',
-  float: 'Decimal',
-  bool: 'Boolean',
-  string: 'String',
-  bytes: 'Bytes',
-  raw: 'Raw',
-  sub: 'Sub-Message',
-  packedint32: 'Packed Int32 Array',
-  packedint64: 'Packed Int64 Array',
-  packedvarint: 'Packed Variable-length Int Array'
-}
+export { decoders, wireTypes, wireLabels, wireMap, parseLabels }
 
 // perform a query using a path
 export function query(tree, path, choices = {}, prefix = '') {

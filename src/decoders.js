@@ -1,4 +1,41 @@
-import Reader, { wireTypes } from './index'
+import RawProto from './index'
+
+export const wireTypes = {
+  VARINT: 0, //  int32, int64, uint32, uint64, sint32, sint64, bool, enum
+  I64: 1, // fixed64, sfixed64, double
+  LEN: 2, // string, bytes, embedded messages, packed repeated fields
+  SGROUP: 3, //  group start (deprecated)
+  EGROUP: 4, //  group end (deprecated)
+  I32: 5 // fixed32, sfixed32, float
+}
+
+export const wireLabels = {
+  0: 'Variable-length Integer',
+  1: '64bit Number',
+  2: 'Length-delimited Bytes',
+  5: '32bit Number'
+}
+
+export const wireMap = {
+  0: ['uint', 'bool', 'raw'],
+  1: ['uint', 'int', 'bytes', 'float', 'raw'],
+  2: ['string', 'bytes', 'sub', 'packedvarint', 'packedint32', 'packedint64', 'raw'],
+  5: ['int', 'uint', 'bytes', 'float', 'raw']
+}
+
+export const parseLabels = {
+  int: 'Signed Integer',
+  uint: 'Unsigned Integer',
+  float: 'Decimal',
+  bool: 'Boolean',
+  string: 'String',
+  bytes: 'Bytes',
+  raw: 'Raw',
+  sub: 'Sub-Message',
+  packedint32: 'Packed Int32 Array',
+  packedint64: 'Packed Int64 Array',
+  packedvarint: 'Packed Variable-length Int Array'
+}
 
 // get string representation of a field
 export function display({ index, type, sub, renderType, value }) {
@@ -9,6 +46,10 @@ export function display({ index, type, sub, renderType, value }) {
   if (renderType === 'bytes') {
     return bytes(v)
   }
+  if (renderType === 'bool') {
+    return v ? 'true' : 'false'
+  }
+
   if (v) {
     return v.toString()
   }
@@ -101,7 +142,7 @@ export const float32 = (b) => new DataView(b.buffer).getFloat32(0, true)
 
 export const packedIntVar = (b) => {
   const out = []
-  const r = new Reader(b)
+  const r = new RawProto(b)
   while (r.offset < r.buffer.length) {
     out.push(r.readVarInt())
   }
