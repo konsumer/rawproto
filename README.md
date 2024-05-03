@@ -1,6 +1,6 @@
 # rawproto
 
-![tests](https://github.com/konsumer/rawproto/actions/workflows/test.yml/badge.svg) [![codecov](https://codecov.io/gh/konsumer/rawproto/graph/badge.svg?token=PBL1G8S4WY)](https://codecov.io/gh/konsumer/rawproto)
+![tests](https://github.com/konsumer/rawproto/actions/workflows/test.yml/badge.svg) [![codecov](https://codecov.io/gh/konsumer/rawproto/graph/badge.svg?token=PBL1G8S4WY)](https://codecov.io/gh/konsumer/rawproto) ![NPM Version](https://img.shields.io/npm/v/rawproto)
 
 Guess structure of protobuf binary from raw data, query binary protobuf without the schema, and output guessed JSON or schema, some CLI utils, and a web tool for exploring raw protobuf.
 
