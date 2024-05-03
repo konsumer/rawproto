@@ -37,7 +37,8 @@ export const parseLabels = {
   raw: 'Raw',
   sub: 'Sub-Message',
   packedint32: 'Packed Int32 Array',
-  packedint64: 'Packed Int64 Array'
+  packedint64: 'Packed Int64 Array',
+  packedvarint: 'Packed Variable-length Int Array'
 }
 
 // perform a query using a path
