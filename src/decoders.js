@@ -1,7 +1,7 @@
 import Reader, { wireTypes } from './index'
 
 // get string representation of a field
-export function display ({ index, type, sub, renderType, value }) {
+export function display({ index, type, sub, renderType, value }) {
   const v = getValue({ index, type, sub, renderType, value }, renderType)
   if (renderType === 'raw') {
     return JSON.stringify(v)
@@ -9,7 +9,9 @@ export function display ({ index, type, sub, renderType, value }) {
   if (renderType === 'bytes') {
     return bytes(v)
   }
-  return v.toString()
+  if (v) {
+    return v.toString()
+  }
 }
 
 // this is a wrapper around a field to just get the value form field/renderType
@@ -21,7 +23,8 @@ export const getValue = (field, type) => {
 
   if (['int', 'uint', 'float', 'bool'].includes(type)) {
     if (field.type === wireTypes.VARINT) {
-      if (type === 'uint' || type === 'int') { // I don't really support signed ints, but the user may be mistaken here (using int for VARINT)
+      if (type === 'uint' || type === 'int') {
+        // I don't really support signed ints, but the user may be mistaken here (using int for VARINT)
         return field.value
       }
       if (type === 'bool') {
@@ -73,30 +76,30 @@ export const getValue = (field, type) => {
 const dec = new TextDecoder()
 
 // hex string of bytes
-export const bytes = b => [...b].map(c => c.toString(16).padStart(2, '0')).join(' ')
+export const bytes = (b) => [...b].map((c) => c.toString(16).padStart(2, '0')).join(' ')
 
 // get the string-value of a buffer
-export const string = b => dec.decode(b)
+export const string = (b) => dec.decode(b)
 
 // get the Unsigned 64-bit Integer value of a 8-byte buffer
-export const uint64 = b => (new DataView(b.buffer)).getBigUInt64(0, true)
+export const uint64 = (b) => new DataView(b.buffer).getBigUint64(0, true)
 
 // get the Signed 64-bit Integer value of a 8-byte buffer
-export const int64 = b => (new DataView(b.buffer)).getBigInt64(0, true)
+export const int64 = (b) => new DataView(b.buffer).getBigInt64(0, true)
 
 // get the 64-bit Decimal value of a 8-byte buffer
-export const float64 = b => (new DataView(b.buffer)).getFloat64(0, true)
+export const float64 = (b) => new DataView(b.buffer).getFloat64(0, true)
 
 // get the Unsigned 32-bit Integer value of a 4-byte buffer
-export const uint32 = b => (new DataView(b.buffer)).getUInt32(0, true)
+export const uint32 = (b) => new DataView(b.buffer).getUint32(0, true)
 
 // get the Signed 32-bit Integer value of a 4-byte buffer
-export const int32 = b => (new DataView(b.buffer)).getInt32(0, true)
+export const int32 = (b) => new DataView(b.buffer).getInt32(0, true)
 
 // get the 32-bit Decimal value of a 4-byte buffer
-export const float32 = b => (new DataView(b.buffer)).getFloat32(0, true)
+export const float32 = (b) => new DataView(b.buffer).getFloat32(0, true)
 
-export const packedIntVar = b => {
+export const packedIntVar = (b) => {
   const out = []
   const r = new Reader(b)
   while (r.offset < r.buffer.length) {
@@ -105,7 +108,7 @@ export const packedIntVar = b => {
   return out
 }
 
-export const packedInt32 = b => {
+export const packedInt32 = (b) => {
   const out = []
   const d = new DataView(b.buffer)
   let offset = 0
@@ -116,7 +119,7 @@ export const packedInt32 = b => {
   return out
 }
 
-export const packedInt64 = b => {
+export const packedInt64 = (b) => {
   const out = []
   const d = new DataView(b.buffer)
   let offset = 0

@@ -21,10 +21,10 @@ export const wireLabels = {
 }
 
 export const wireMap = {
-  0: ['raw', 'uint', 'bool'],
-  1: ['raw', 'bytes', 'uint', 'int', 'float'],
-  2: ['raw', 'bytes', 'string', 'packedvarint', 'packedint32', 'packedint64'],
-  5: ['raw', 'bytes', 'uint', 'int', 'float']
+  0: ['uint', 'bool', 'raw'],
+  1: ['uint', 'int', 'bytes', 'float', 'raw'],
+  2: ['string', 'bytes', 'sub', 'packedvarint', 'packedint32', 'packedint64', 'raw'],
+  5: ['int', 'uint', 'bytes', 'float', 'raw']
 }
 
 export const parseLabels = {
@@ -35,19 +35,19 @@ export const parseLabels = {
   string: 'String',
   bytes: 'Bytes',
   raw: 'Raw',
-  sub: 'Sub-Message'
+  sub: 'Sub-Message',
+  packedint32: 'Packed Int32 Array',
+  packedint64: 'Packed Int64 Array'
 }
 
 // perform a query using a path
-export function query (tree, path, choices = {}, prefix = '') {
+export function query(tree, path, choices = {}, prefix = '') {
   if (typeof choices === 'string') {
     if (!prefix) {
       prefix = choices
       choices = {}
     } else {
-      throw new Error(
-        'Usage: query(tree, choices, "X.X.X") or query(tree, "X.X.X:type")'
-      )
+      throw new Error('Usage: query(tree, choices, "X.X.X") or query(tree, "X.X.X:type")')
     }
   }
 
@@ -79,19 +79,17 @@ export function query (tree, path, choices = {}, prefix = '') {
   }
 
   // apply a value-transformer to every field that has the value the user wants
-  return current
-    .filter((c) => c.index === targetField)
-    .map((f) => decoders.getValue(f, type))
+  return current.filter((c) => c.index === targetField).map((f) => decoders.getValue(f, type))
 }
 
 export class Reader {
-  constructor (buffer) {
+  constructor(buffer) {
     this.buffer = new Uint8Array(buffer)
     this.offset = 0
   }
 
   // read a VARINT from buffer, at offset
-  readVarInt () {
+  readVarInt() {
     let result = 0
     let shift = 0
     let byte
@@ -107,7 +105,7 @@ export class Reader {
   }
 
   // read a portion of the buffer, at offset
-  readBuffer (length) {
+  readBuffer(length) {
     if (this.offset + length > this.buffer.length) {
       throw new Error(`Buffer overflow while reading buffer ${length} bytes`)
     }
@@ -117,7 +115,7 @@ export class Reader {
   }
 
   // read a group for index number (from current offset)
-  readGroup (index) {
+  readGroup(index) {
     const offsetStart = this.offset
     let indexType = parseInt(this.readVarInt())
     let type = indexType & 0b111
@@ -128,8 +126,15 @@ export class Reader {
     return this.buffer.slice(offsetStart, this.offset)
   }
 
-  handleField (type, index) {
-    const newrec = { type, index, pos: [this.offset] }
+  handleField(type, index) {
+    // choose first renderType as default
+    // TODO: handle choices
+    let renderType = 'raw'
+    if (wireMap[type]) {
+      renderType = wireMap[type][0]
+    }
+
+    const newrec = { type, index, pos: [this.offset], renderType }
     switch (type) {
       case wireTypes.VARINT:
         newrec.value = this.readVarInt()
@@ -142,10 +147,10 @@ export class Reader {
       case wireTypes.LEN:
         newrec.value = this.readBuffer(this.readVarInt())
         newrec.pos.push(this.offset)
-        // this checks if sub-image is possible
+        // this checks if sub-message is possible
         try {
-          new Reader(newrec.value).readMessage()
-          newrec.sub = true
+          newrec.sub = new Reader(newrec.value).readMessage()
+          newrec.renderType = 'sub'
         } catch (e) {}
         return newrec
       case wireTypes.SGROUP:
@@ -165,7 +170,7 @@ export class Reader {
   }
 
   // read 1 level of LEN message field
-  readMessage () {
+  readMessage() {
     const out = []
     while (this.offset < this.buffer.length) {
       const indexType = parseInt(this.readVarInt())
