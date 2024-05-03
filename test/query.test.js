@@ -1,4 +1,4 @@
-// same tests as reader, but using query calls
+// same tests as reader, but using more elegant query calls
 
 /* global test expect */
 
