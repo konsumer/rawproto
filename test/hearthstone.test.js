@@ -88,3 +88,28 @@ test('field with groups (using plain query)', () => {
   expect(videos).toEqual(['https://youtu.be/XT7YEb9_Muw'])
   expect(videoThumbs).toEqual(['https://i.ytimg.com/vi/XT7YEb9_Muw/hqdefault.jpg'])
 })
+
+test('field with groups (using sub query off main, with sub-queries)', () => {
+  let icon
+  const screenshots = []
+  const videos = []
+  const videoThumbs = []
+  for (const mediaItem of query(tree, '1.2.4.10:sub')) {
+    const type = query(mediaItem, '1:uint').pop()
+    const url = query(mediaItem, '5:string').pop()
+    switch (type) {
+      case 4:
+        icon = url
+        break
+      case 1:
+        screenshots.push(url)
+        break
+      case 3:
+        videos.push(url)
+        break
+      case 13:
+        videoThumbs.push(url)
+        break
+    }
+  }
+})
