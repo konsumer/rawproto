@@ -19,11 +19,12 @@
     "yargs": "^17.7.2"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^1.5.3",
     "microbundle": "^0.15.1",
     "vitest": "^1.5.3"
   },
   "scripts": {
-    "test": "vitest run --globals --reporter verbose",
+    "test": "vitest run --globals --reporter verbose --coverage --coverage.include src/**/*.js",
     "test:watch": "vitest --globals --reporter verbose --ui",
     "prepublishOnly": "npm run build",
     "build": "microbundle",
@@ -35,20 +36,12 @@
     "type": "git",
     "url": "git+https://github.com/konsumer/rawproto.git"
   },
-  "keywords": [
-    "protobuf",
-    "decode",
-    "reverse-engineer",
-    "binary",
-    "raw"
-  ],
+  "keywords": ["protobuf", "decode", "reverse-engineer", "binary", "raw"],
   "author": "David Konsumer <konsumer@jetboystudio.com> (http://konsumer.js.org)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/konsumer/rawproto/issues"
   },
   "homepage": "https://rawproto.konsumer.js.org",
-  "files": [
-    "dist/*"
-  ]
+  "files": ["dist/*"]
 }

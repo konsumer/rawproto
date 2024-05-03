@@ -8,3 +8,4 @@ node_modules
 /test/
 sea-config.json
 .prettierrc
+/coverage/

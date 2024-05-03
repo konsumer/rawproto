@@ -4,3 +4,4 @@ node_modules
 /dist/
 *.blob
 /releases/
+/coverage/
