@@ -1,6 +1,6 @@
 import RawProto, { decoders, parseLabels, wireLabels, wireMap, wireTypes } from 'rawproto'
 import { useEffect, useState } from 'react'
-import Linkify from 'linkify-react'
+import Linkify from './Linkify.jsx'
 
 const badgeColors = {}
 badgeColors[wireTypes.VARINT] = 'default'
@@ -38,7 +38,7 @@ function ProtoField(field) {
   return (
     <div>
       <div className={`badge badge-${badgeColors[field.type]} gap-2`}>{field.index}</div>
-      <Linkify options={{ attributes: { target: '_new', className: 'underline' } }}>{decoders.display(field)}</Linkify>
+      <Linkify>{decoders.display(field)}</Linkify>
     </div>
   )
 }
