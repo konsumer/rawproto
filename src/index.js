@@ -147,6 +147,7 @@ export class RawProto {
 
   // read 1 level of LEN message field
   readMessage() {
+    // TODO: use this.choices to insert renderType
     const out = []
     while (this.offset < this.buffer.length) {
       const indexType = parseInt(this.readVarInt())
@@ -159,24 +160,51 @@ export class RawProto {
   }
 
   walk(callback, prefix = '') {
-    throw new Error('TODO')
-  }
-
-  walkerJS(prefix, wireType, data) {
-    throw new Error('TODO')
-  }
-
-  walkerProto(prefix, wireType, data) {
-    throw new Error('TODO')
+    return walk(this, callback, prefix)
   }
 
   toJS(prefix = '') {
-    return this.walk(this.walkerJS.bind(this), prefix)
+    return this.walk(walkerJS, prefix)
+  }
+
+  toJSON(...args) {
+    return this.toJS(...args)
   }
 
   toProto(prefix = '') {
-    return this.walk(this.walkerProto.bind(this), prefix)
+    return this.walk(walkerProto, prefix)
   }
+}
+
+// simple util to remove a prefix from an object keyed by flat paths (like choices)
+export const removePathPrefix = (choices = {}, path = '') =>
+  Object.keys(choices).reduce((a, v, i) => {
+    return { ...a, [v.replace(new RegExp(`^${path}\.`), '')]: choices[v] }
+  }, {})
+
+// walk over a tree recursivley calling callback on each item, each field is outputted as an array, eah message is an object
+export function walk(reader, callback, prefix = '') {
+  reader.tree ||= reader.readMessage()
+  const out = {}
+  for (const field of reader.tree) {
+    out[field.index] ||= []
+    const f = prefix ? `${prefix}.${field.index}` : field.index
+    out[field.index].push(callback(field, f, reader, callback))
+  }
+  return out
+}
+
+// generic walker that will apply default transforms to every field
+export function walkerJS(field, path, reader, callback) {
+  if (field.type === wireTypes.LEN) {
+    // TODO: pass choices form original reader
+    return walk(new RawProto(field.value, removePathPrefix(reader.choices, path)), callback, path)
+  }
+  return decoders.getValue(field, field.renderType)
+}
+
+export function walkerProto(field, path, reader) {
+  throw new Error('TODO')
 }
 
 export default RawProto
