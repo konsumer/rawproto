@@ -13,12 +13,13 @@ export const wireLabels = {
   0: 'Variable-length Integer',
   1: '64bit Number',
   2: 'Length-delimited Bytes',
+  3: 'Grouped Messages',
   5: '32bit Number'
 }
 
 export const wireMap = {
-  0: ['int', 'uint', 'bool', 'raw'],
-  1: ['uint', 'int', 'bytes', 'float', 'raw'],
+  0: ['int', 'bool', 'raw'],
+  1: ['int', 'uint', 'bytes', 'float', 'raw'],
   2: ['string', 'bytes', 'sub', 'packedvarint', 'packedint32', 'packedint64', 'raw'],
   5: ['int', 'uint', 'bytes', 'float', 'raw']
 }

@@ -1,5 +1,11 @@
-import RawProto, { decoders, parseLabels, wireLabels, wireMap } from 'rawproto'
+import RawProto, { decoders, parseLabels, wireLabels, wireMap, wireTypes } from 'rawproto'
 import { useEffect, useState } from 'react'
+
+const badgeColors = {}
+badgeColors[wireTypes.VARINT] = 'default'
+badgeColors[wireTypes.LEN] = 'primary'
+badgeColors[wireTypes.I64] = 'accent'
+badgeColors[wireTypes.I32] = 'secondary'
 
 function ProtoField(field) {
   const [sub, setSub] = useState()
@@ -20,7 +26,7 @@ function ProtoField(field) {
     return (
       <details>
         <summary>
-          {field.index}: ({parseLabels.sub})
+          <div className={`badge badge-${badgeColors[field.type]} gap-2`}>{field.index}</div>
         </summary>
         <ProtoDisplay fields={sub} />
       </details>
@@ -29,7 +35,8 @@ function ProtoField(field) {
 
   return (
     <div>
-      {field.index}: ({wireLabels[field.type]} as {parseLabels[field.renderType]}) {decoders.display(field)}
+      <div className={`badge badge-${badgeColors[field.type]} gap-2`}>{field.index}</div>
+      {decoders.display(field)}
     </div>
   )
 }
@@ -45,7 +52,7 @@ export default function ProtoDisplay({ className, fields }) {
       {fields.map((field) => {
         const Field = ProtoField
         return (
-          <li key={field.index}>
+          <li key={field.index} title={`${wireLabels[field.type]} as ${parseLabels[field.renderType]}`}>
             <Field {...field} />
           </li>
         )

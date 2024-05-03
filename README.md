@@ -51,7 +51,7 @@ const mydata = proto.walk((path, wireType, data) => {
 Protobuf encodes several different possible types for every wire-type. In this lib, we guess the type based on some context-clues, but it will never be perfect, without hand-tuning. Here are the possible types we support:
 
 ```
-VARINT - uint, bool
+VARINT - int, bool
 FIXED64 - uint, int, bytes, float
 LEN - string, bytes, sub, packedvarint, packedint32, packedint64
 FIXED32 - int, uint, bytes, float

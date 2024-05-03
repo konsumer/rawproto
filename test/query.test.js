@@ -9,7 +9,7 @@ test('A Simple Message', () => {
     1: 150
   */
   const tree = new RawProto([0x08, 0x96, 0x01]).readMessage()
-  expect(query(tree, '1:uint')).toEqual([150])
+  expect(query(tree, '1:int')).toEqual([150])
 })
 
 test('A Simple Message: choices', () => {
@@ -17,7 +17,7 @@ test('A Simple Message: choices', () => {
     1: 150
   */
   const tree = new RawProto([0x08, 0x96, 0x01]).readMessage()
-  expect(query(tree, '1', { 1: 'uint' })).toEqual([150])
+  expect(query(tree, '1', { 1: 'int' })).toEqual([150])
 })
 
 test('A Simple Message: choices & prefix', () => {
@@ -25,7 +25,7 @@ test('A Simple Message: choices & prefix', () => {
     3: {1: 150}
   */
   const tree = new RawProto([0x1a, 0x03, 0x08, 0x96, 0x01]).readMessage()
-  expect(query(tree, '1', { 3.1: 'uint' }, '3')).toEqual([150])
+  expect(query(tree, '1', { 3.1: 'int' }, '3')).toEqual([150])
 })
 
 // test same stuff using RawProto.query
@@ -35,13 +35,13 @@ test('A Simple Message: RawProto.query', () => {
   */
   const tree = new RawProto([0x1a, 0x03, 0x08, 0x96, 0x01], { 3.1: 'uint' })
   // type in query
-  expect(tree.query('3.1:uint')).toEqual([150])
+  expect(tree.query('3.1:int')).toEqual([150])
 
   // use choices
   expect(tree.query('3.1')).toEqual([150])
 
   // use type & prefix
-  expect(tree.query('1:uint', '3')).toEqual([150])
+  expect(tree.query('1:int', '3')).toEqual([150])
 
   // use choices & prefix
   expect(tree.query('1', '3')).toEqual([150])
@@ -60,7 +60,7 @@ test('Submessages', () => {
     3: {1: 150}
   */
   const tree = new RawProto([0x1a, 0x03, 0x08, 0x96, 0x01]).readMessage()
-  expect(query(tree, '3.1:uint')).toEqual([150])
+  expect(query(tree, '3.1:int')).toEqual([150])
 })
 
 test('Repeated Elements', () => {
@@ -71,7 +71,7 @@ test('Repeated Elements', () => {
     5: 3
   */
   const tree = new RawProto([0x22, 0x05, 0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x28, 0x01, 0x28, 0x02, 0x28, 0x03]).readMessage()
-  expect(query(tree, '5:uint')).toEqual([1, 2, 3])
+  expect(query(tree, '5:int')).toEqual([1, 2, 3])
   expect(query(tree, '4:string')).toEqual(['hello'])
 })
 
