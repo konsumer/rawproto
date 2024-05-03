@@ -6,6 +6,7 @@ badgeColors[wireTypes.VARINT] = 'default'
 badgeColors[wireTypes.LEN] = 'primary'
 badgeColors[wireTypes.I64] = 'accent'
 badgeColors[wireTypes.I32] = 'secondary'
+badgeColors[wireTypes.SGROUP] = 'primary'
 
 function ProtoField(field) {
   const [sub, setSub] = useState()
