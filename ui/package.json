@@ -9,7 +9,8 @@
   },
   "dependencies": {
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-linkify": "^1.0.0-alpha"
   },
   "devDependencies": {
     "@vitejs/plugin-react-swc": "^3.5.0",
