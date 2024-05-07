@@ -99,3 +99,5 @@ I have some ideas for improvement. I was in a hurry to get the new ideas working
 - build `choices` by guessing & merging with another `choices` object. This could be used with last thing to make rendering simpler (all choices would be pre-configured, so choices + offsets get all values.)
 - build `choices` from existing proto. This could be used with above to allow guessing types of only the unknown fields, but leaving ther others.
 - build `choices` (guess) from existing JSON. This would allow taking some mock JSON and building proto or parsing protobuf.
+- setup recursiove proxies so you can get values like `1.2.4.1.toString()` without query
+
