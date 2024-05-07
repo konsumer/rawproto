@@ -6,7 +6,6 @@ import { fileURLToPath } from 'url'
 import { join, dirname } from 'path'
 import { readFile } from 'fs/promises'
 import RawProto, { query } from 'rawproto'
-import { wireTypes } from 'src/decoders'
 
 // build an initial array of the data I want to look at
 // do this, and you can use getPath() to get values
@@ -112,4 +111,9 @@ test('field with groups (using sub query off main, with sub-queries)', () => {
         break
     }
   }
+  expect(icon).toEqual('https://play-lh.googleusercontent.com/qTt7JkhZ-U0kevENyTChyUijNUEctA3T5fh7cm8yzKUG0UAnMUgOMpG_9Ln7D24NbQ')
+  expect(screenshots.length).toEqual(6)
+  expect(screenshots[0]).toEqual('https://play-lh.googleusercontent.com/m-S0SqOv428DZcm46NJlyv0pffYpfsNjWz6iyf9LVM1TCWbzWs3clWaugjfzXXnCTbY')
+  expect(videos).toEqual(['https://youtu.be/XT7YEb9_Muw'])
+  expect(videoThumbs).toEqual(['https://i.ytimg.com/vi/XT7YEb9_Muw/hqdefault.jpg'])
 })

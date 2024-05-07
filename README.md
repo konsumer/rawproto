@@ -95,9 +95,9 @@ I used to have the functionality of this lib split up into several other project
 I have some ideas for improvement. I was in a hurry to get the new ideas working similar to how the older libs worked, and add all the new features, but It's far from optimized.
 
 - on-demand sub-tree parsing. Currently it needs to get sub-trees for query & walking, but it would be better if it only did this when it enters the LEN branch.
-- There is a lot of duplication of data in LEN fields (and non-LEN) like `reader`, `tree`, `value` and even kinda `pos` all describe the same data. It would be better if it only used a single instance of bytes for all, and used offsets, so nothing has a "value" but you can pull values as needed. I could use a single `DataView` & buffer object, for the whole reader, and just use offsets to pull out values on-demand (`query`/`walk`/`display`/`getValue`.)
+- There is a lot of duplication of data in LEN fields (and non-LEN) like `reader`, `tree`, `value` and even kinda `pos` all describe the same bytes, often repeated. It would be better if it only used a single instance of bytes for all, and used offsets, so nothing has a "value" but you can pull values as needed. I could use a single `DataView` & buffer object, for the whole reader, and just use offsets to pull out values on-demand (`query`/`walk`/`display`/`getValue`.)
 - build `choices` by guessing & merging with another `choices` object. This could be used with last thing to make rendering simpler (all choices would be pre-configured, so choices + offsets get all values.)
 - build `choices` from existing proto. This could be used with above to allow guessing types of only the unknown fields, but leaving ther others.
 - build `choices` (guess) from existing JSON. This would allow taking some mock JSON and building proto or parsing protobuf.
-- setup recursiove proxies so you can get values like `1.2.4.1.toString()` without query
+- setup recursive proxies so you can get values like `1.2.4.1.toString()` without query
 

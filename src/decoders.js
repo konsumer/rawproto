@@ -39,15 +39,15 @@ export const parseLabels = {
 }
 
 // get string representation of a field
-export function display({ index, type, sub, renderType, value }) {
-  const v = getValue({ index, type, sub, renderType, value }, renderType)
-  if (renderType === 'raw') {
+export function display (field) {
+  const v = getValue(field, field.renderType)
+  if (field.renderType === 'raw') {
     return JSON.stringify(v)
   }
-  if (renderType === 'bytes') {
+  if (field.renderType === 'bytes') {
     return bytes(v)
   }
-  if (renderType === 'bool') {
+  if (field.renderType === 'bool') {
     return v ? 'true' : 'false'
   }
 
@@ -63,10 +63,41 @@ export const getValue = (field, type) => {
     return field
   }
 
+  if (type === 'string') {
+    return string(field.value)
+  }
+
+  if (type === 'packedvarint') {
+    if (Array.isArray(field.value)) {
+      return field.value
+    }
+    return packedIntVar(field.value)
+  }
+
+  if (type === 'packedint32') {
+    if (Array.isArray(field.value)) {
+      return field.value
+    }
+    return packedInt32(field.value)
+  }
+
+  if (type === 'packedint64') {
+    if (Array.isArray(field.value)) {
+      return field.value
+    }
+    return packedInt64(field.value)
+  }
+
+  if (field.parsed) {
+    if (type === 'sub') {
+      return field.parsed
+    }
+  }
+
   if (['int', 'uint', 'float', 'bool'].includes(type)) {
     if (field.type === wireTypes.VARINT) {
       if (type === 'uint' || type === 'int') {
-        // I don't really support signed ints, but the user may be mistaken here (using int for VARINT)
+        // I don't really support signed ints for VARINT, but the user may be mistaken here
         return field.value
       }
       if (type === 'bool') {
@@ -98,24 +129,9 @@ export const getValue = (field, type) => {
     return field.value
   }
 
+  // if type is sub, but there is no parsed, build it
   if (type === 'sub') {
     return new RawProto(field.value).readMessage()
-  }
-
-  if (type === 'string') {
-    return string(field.value)
-  }
-
-  if (type === 'packedvarint') {
-    return packedIntVar(field.value)
-  }
-
-  if (type === 'packedint32') {
-    return packedInt32(field.value)
-  }
-
-  if (type === 'packedint64') {
-    return packedInt64(field.value)
   }
 }
 
@@ -177,4 +193,9 @@ export const packedInt64 = (b) => {
     offset += 8
   }
   return out
+}
+
+// get Protobuf string for a field
+export function getProto (field, renderType, indent = 0) {
+  // TODO
 }

@@ -16,7 +16,9 @@ test('Traverse Submessages', () => {
   /*
     3: {1: 150}
   */
-  const j = new RawProto([0x1a, 0x03, 0x08, 0x96, 0x01]).toJS()
+  const r = new RawProto([0x1a, 0x03, 0x08, 0x96, 0x01])
+  const j = r.toJS()
+  console.log(r.tree)
   expect(j).toEqual({ 3: [{ 1: [150] }] })
 })
 
@@ -39,10 +41,11 @@ test('Repeated Elements', () => {
   expect(j).toEqual({ 4: ['hello'], 5: [1, 2, 3] })
 })
 
-test('Packed Repeated Fields', () => {
+test('Packed Repeated Varint Field', () => {
   /*
     6: {3 270 86942}
   */
+  // choice is required because packedvarint cannot be detected automatically
   const j = new RawProto([0x32, 0x06, 0x03, 0x8e, 0x02, 0x9e, 0xa7, 0x05], { 6: 'packedvarint' }).toJS()
   expect(j).toEqual({ 6: [[3, 270, 86942]] })
 })
