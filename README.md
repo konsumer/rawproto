@@ -79,7 +79,7 @@ Groups are treated as repeated `LEN` message-fields.
 
 
 
-### migration
+## migration
 
 I used to have the functionality of this lib split up into several other projects. Here is migration instructions, if you want to update to this one (recommended):
 
@@ -89,3 +89,13 @@ I used to have the functionality of this lib split up into several other project
 - [protoquery](https://github.com/konsumer/protoquery) - this was some of the start of ideas for this. No one is probly using this. Essentially it's the same stuff in [query](https://github.com/konsumer/rawproto/blob/master/test/query.test.js)
 - rawproto - This lib used to be able to do JSON and generate proto, and provided a different CLI. You should be able to use the new APIs to accomplish all the same stuff, but it may require a bit of a change to your code. Have a look at the [unit-tests](https://github.com/konsumer/rawproto/tree/master/test), to get an idea of how it works.
 
+
+## todo
+
+I have some ideas for improvement. I was in a hurry to get the new ideas working similar to how the older libs worked, and add all the new features, but It's far from optimized.
+
+- on-demand sub-tree parsing. Currently it needs to get sub-trees for query & walking, but it would be better if it only did this when it enters the LEN branch.
+- There is a lot of duplication of data in LEN fields (and non-LEN) like reader, tree, value and even kinda pos all kinda describe the same data. It would be better if it only used a single instance of bytes for all, and used offsets, so nothing has a "value" but you can pull values as needed. I could use a single `DataView` & buffer object, for the whole reader, and just use offsets to pull out values on-demand (`query`/`walk`/`display`/`getValue`.)
+- build `choices` by guessing & merging with another `choices` object. This could be used with last thing to make rendering simpler (all choices would be pre-configured, so choices + offsets get all values.)
+- build `choices` from existing proto. This could be used with above to allow guessing types of only the unknown fields, but leaving ther others.
+- build `choices` (guess) from existing JSON. This would allow taking some mock JSON and building proto or parsing protobuf.
