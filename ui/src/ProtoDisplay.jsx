@@ -1,4 +1,4 @@
-import RawProto, { decoders, parseLabels, wireLabels, wireTypes } from 'rawproto'
+import RawProto, { decoders, parseLabels, wireLabels, wireMap, wireTypes } from 'rawproto'
 import { useEffect, useState } from 'react'
 import Linkify from './Linkify.jsx'
 
@@ -9,7 +9,7 @@ badgeColors[wireTypes.I64] = 'accent'
 badgeColors[wireTypes.I32] = 'secondary'
 badgeColors[wireTypes.SGROUP] = 'primary'
 
-function ProtoField (field) {
+function ProtoField(field) {
   const [sub, setSub] = useState()
 
   useEffect(() => {
@@ -29,7 +29,7 @@ function ProtoField (field) {
       <details>
         <summary>
           <div className={`badge badge-${badgeColors[field.type]} gap-2`}>{field.index}</div>
-          <p className='text-gray-500 italic'>{parseLabels[field.renderType]}</p>
+          <p className="text-gray-500 italic">{parseLabels[field.renderType]}</p>
         </summary>
         <ProtoDisplay fields={sub} />
       </details>
@@ -40,12 +40,12 @@ function ProtoField (field) {
     <div>
       <div className={`badge badge-${badgeColors[field.type]} gap-2`}>{field.index}</div>
       <Linkify>
-        <div className='flex w-full justify-between'>
+        <div className="flex w-full justify-between">
           <p>
             {decoders.display(field)}
           </p>
-          <p className='text-xs neutral-content/50'>
-            {`${wireLabels[field.type]}`}
+          <p>
+            {`${wireLabels[field.type]} as ${parseLabels[field.renderType]}`}
           </p>
         </div>
       </Linkify>
@@ -54,7 +54,7 @@ function ProtoField (field) {
 }
 
 // this will display a message-tree
-export default function ProtoDisplay ({ className, fields }) {
+export default function ProtoDisplay({ className, fields }) {
   if (!fields?.length) {
     return ''
   }
@@ -62,9 +62,10 @@ export default function ProtoDisplay ({ className, fields }) {
   return (
     <ul className={className}>
       {fields.map((field) => {
+        const Field = ProtoField
         return (
           <li key={field.index} title={`${wireLabels[field.type]} as ${parseLabels[field.renderType]}`}>
-            <ProtoField {...field} />
+            <Field {...field} />
           </li>
         )
       })}
