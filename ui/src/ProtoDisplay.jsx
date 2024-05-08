@@ -29,6 +29,7 @@ function ProtoField(field) {
       <details>
         <summary>
           <div className={`badge badge-${badgeColors[field.type]} gap-2`}>{field.index}</div>
+          <p className="text-gray-500 italic">{parseLabels[field.renderType]}</p>
         </summary>
         <ProtoDisplay fields={sub} />
       </details>
@@ -38,7 +39,16 @@ function ProtoField(field) {
   return (
     <div>
       <div className={`badge badge-${badgeColors[field.type]} gap-2`}>{field.index}</div>
-      <Linkify>{decoders.display(field)}</Linkify>
+      <Linkify>
+        <div className="flex w-full justify-between">
+          <p>
+            {decoders.display(field)}
+          </p>
+          <p>
+            {`${wireLabels[field.type]} as ${parseLabels[field.renderType]}`}
+          </p>
+        </div>
+      </Linkify>
     </div>
   )
 }
