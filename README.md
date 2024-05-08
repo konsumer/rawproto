@@ -32,33 +32,34 @@ You can use it in code like this:
 
 ```js
 import { readFile } from 'fs/promises'
-import RawProto, { query } from 'rawproto'
+import RawProto from 'rawproto'
 
-// load proto & override "best guess" of types for a single field
-const proto = new RawProto(await readFile('data.pb'), { '1.2.4.10.5': 'string' })
+// you can also pull utils for doing your own thing
+import { walkerJS, walkerProto } from 'rawproto'
+
+// load proto
+const proto = new RawProto(await readFile('data.pb'))
 
 // get a single field, without parsing the whole tree
-console.log(proto.query('1.2.4.10.5:bytes'))
+console.log(proto.query('1.2.4.10.5:string'))
 
-// same thing, but using type-mapping
-console.log(proto.query('1.2.4.10.5'))
+// you can also pull things like they are arrays/values
+console.log(proto['1'][0]['2'][0]['4'][0]['10'].map(r => r['5'][0].string ))
 
-// You can also cache your tree, reuse it in multiple queries, and use a prefix
-console.log(query(proto, '5', '1.2.4.10'))
-console.log(query(proto, '1', '1.2.4.10'))
-
-// guess to decode as JS object, also works with prefix
+// guess to decode as JS object
+// this is same as proto.walk(walkerJS)
 console.log(proto.toJS())
 
-// guess to generate .proto file string, also works with prefix
+// guess to generate .proto file string
+// this is same as proto.walk(walkerProto)
 console.log(proto.toProto())
 
-// walk over messages recursively, calling your callback.
-const mydata = proto.walk((path, wireType, data) => {
-  console.log({ path, wireType, data })
+// walk over all fields recursively, calling your callback.
+const mydata = proto.walk((field) => {
+  console.log(field)
 
   // just do whatever it normally does to make JS-object
-  return proto.walkerJS(path, wireType, data)
+  return walkerJS(field)
 })
 ```
 
@@ -69,13 +70,13 @@ Protobuf encodes several different possible types for every wire-type. In this l
 ```
 VARINT - int, bool
 FIXED64 - uint, int, bytes, float
-LEN - string, bytes, sub, packedvarint, packedint32, packedint64
+LEN - string, bytes, packedvarint, packedint32, packedint64
 FIXED32 - int, uint, bytes, float
 ```
 
 You can also use `raw` for any type to get the raw field with bytes + meta.
 
-Groups are treated as repeated `LEN` message-fields.
+Groups are treated as repeated `LEN` message-fields, and `LEN` will try to be parsed as sub-tree, but you can override with other types. 
 
 
 
@@ -89,15 +90,4 @@ I used to have the functionality of this lib split up into several other project
 - [protoquery](https://github.com/konsumer/protoquery) - this was some of the start of ideas for this. No one is probly using this. Essentially it's the same stuff in [query](https://github.com/konsumer/rawproto/blob/master/test/query.test.js)
 - rawproto - This lib used to be able to do JSON and generate proto, and provided a different CLI. You should be able to use the new APIs to accomplish all the same stuff, but it may require a bit of a change to your code. Have a look at the [unit-tests](https://github.com/konsumer/rawproto/tree/master/test), to get an idea of how it works.
 
-
-## todo
-
-I have some ideas for improvement. I was in a hurry to get the new ideas working similar to how the older libs worked, and add all the new features, but It's far from optimized.
-
-- on-demand sub-tree parsing. Currently it needs to get sub-trees for query & walking, but it would be better if it only did this when it enters the LEN branch.
-- There is a lot of duplication of data in LEN fields (and non-LEN) like `reader`, `tree`, `value` and even kinda `pos` all describe the same bytes, often repeated. It would be better if it only used a single instance of bytes for all, and used offsets, so nothing has a "value" but you can pull values as needed. I could use a single `DataView` & buffer object, for the whole reader, and just use offsets to pull out values on-demand (`query`/`walk`/`display`/`getValue`.)
-- build `choices` by guessing & merging with another `choices` object. This could be used with last thing to make rendering simpler (all choices would be pre-configured, so choices + offsets get all values.)
-- build `choices` from existing proto. This could be used with above to allow guessing types of only the unknown fields, but leaving ther others.
-- build `choices` (guess) from existing JSON. This would allow taking some mock JSON and building proto or parsing protobuf.
-- setup recursive proxies so you can get values like `1.2.4.1.toString()` without query
 

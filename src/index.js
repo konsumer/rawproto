@@ -24,6 +24,10 @@ export class ReaderFixed {
   }
 
   // lazy-load representations other than this.buffer (ArrayBuffer)
+  get raw () {
+    return this
+  }
+
   get string () {
     return this.uint.toString()
   }
@@ -81,6 +85,10 @@ export class ReaderVarInt {
   }
 
   // lazy-load representations other than this.buffer (ArrayBuffer)
+  get raw () {
+    return this
+  }
+
   get bytes () {
     this._bytes ||= new Uint8Array(this.buffer).slice(...this.pos)
     return this._bytes
@@ -180,6 +188,19 @@ export class ReaderMessage {
     return result
   }
 
+  // utils
+  query (q) {}
+
+  walk (callback) {}
+
+  toJS () {
+    return this.walk(walkerJS)
+  }
+
+  toProto () {
+    return this.walk(walkerProto)
+  }
+
   // lazy-load representations other than this.buffer (ArrayBuffer)
   get raw () {
     return this
@@ -232,3 +253,7 @@ export class ReaderMessage {
 }
 
 export default ReaderMessage
+
+export function walkerJS (field) {}
+
+export function walkerProto (field) {}
