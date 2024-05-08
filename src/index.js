@@ -1,246 +1,234 @@
-// https://protobuf.dev/programming-guides/encoding/
-
-import * as decoders from './decoders'
-
-const { wireTypes, wireLabels, wireMap, parseLabels } = decoders
-
-export { decoders, wireTypes, wireLabels, wireMap, parseLabels }
-
-// perform a query using a path
-export function query (tree, path, choices = {}, prefix = '') {
-  if (typeof choices === 'string') {
-    if (!prefix) {
-      prefix = choices
-      choices = {}
-    } else {
-      throw new Error('Usage: query(tree, choices, "X.X.X") or query(tree, "X.X.X:type")')
-    }
-  }
-
-  // this allows you to override type in path, but also will apply type-choice & prefix
-  let [p, type] = path.split(':')
-  if (prefix) {
-    p = `${prefix}.${p}`
-  }
-  if (!type) {
-    if (choices[p]) {
-      type = choices[p]
-    } else {
-      type = 'raw'
-    }
-  }
-
-  // now type is the type of value to pull, and p is the path, from the top
-
-  let current = tree
-  const pp = p.split('.').map((i) => parseInt(i))
-  const targetField = parseInt(pp.pop())
-
-  // this will give you just the messages that the query asked for
-  // TODO: use parsed instead of new RawProto(c.value).readMessage()
-  for (const pathIndex of pp) {
-    current = current
-      .filter((c) => c.index === parseInt(pathIndex))
-      .map((c) => new RawProto(c.value).readMessage())
-      .reduce((a, c) => [...a, ...c], [])
-  }
-
-  // apply a value-transformer to every field that has the value the user wants
-  return current.filter((c) => c.index === targetField).map((f) => decoders.getValue(f, type))
+export const wireTypes = {
+  VARINT: 0, //  int32, int64, uint32, uint64, sint32, sint64, bool, enum
+  I64: 1, // fixed64, sfixed64, double
+  LEN: 2, // string, bytes, embedded messages, packed repeated fields
+  SGROUP: 3, //  group start (deprecated)
+  EGROUP: 4, //  group end (deprecated)
+  I32: 5 // fixed32, sfixed32, float
 }
 
-export class RawProto {
-  constructor (buffer, choices = {}) {
-    this.buffer = new Uint8Array(buffer)
-    this.offset = 0
-    this.choices = choices
+const dec = new TextDecoder()
+
+export const wireMap = {
+  0: ['int', 'bool', 'raw'],
+  1: ['int', 'uint', 'bytes', 'float', 'raw'],
+  2: ['bytes', 'string', 'sub', 'packedvarint', 'packedint32', 'packedint64', 'raw'],
+  5: ['int', 'uint', 'bytes', 'float', 'raw']
+}
+
+export class ReaderFixed {
+  constructor (buffer, type) {
+    this.buffer = buffer
+    this.type = type
+    this.dataView = new DataView(this.buffer)
   }
 
-  // read a VARINT from buffer, at offset
+  // lazy-load representations other than this.buffer (ArrayBuffer)
+  get string () {
+    return this.uint.toString()
+  }
+
+  get bytes () {
+    this._bytes ||= new Uint8Array(this.buffer)
+    return this._bytes
+  }
+}
+
+export class ReaderFixed64 extends ReaderFixed {
+  constructor (buffer) {
+    super(buffer, wireTypes.I64)
+  }
+
+  // lazy-load representations other than this.buffer (ArrayBuffer)
+  get uint () {
+    return this.dataView.getBigUint64(0, true)
+  }
+
+  get int () {
+    return this.dataView.getBigInt64(0, true)
+  }
+
+  get float () {
+    return this.dataView.getFloat64(0, true)
+  }
+}
+
+export class ReaderFixed32 extends ReaderFixed {
+  constructor (buffer) {
+    super(buffer, wireTypes.I64)
+  }
+
+  // lazy-load representations other than this.buffer (ArrayBuffer)
+  get uint () {
+    return this.dataView.getBigUint32(0, true)
+  }
+
+  get int () {
+    return this.dataView.getBigInt32(0, true)
+  }
+
+  get float () {
+    return this.dataView.getFloat32(0, true)
+  }
+}
+
+export class ReaderVarInt {
+  constructor (buffer, value) {
+    this.type = wireTypes.VARINT
+    this.buffer = buffer
+    this.uint = value
+    this.int = value
+  }
+
+  // lazy-load representations other than this.buffer (ArrayBuffer)
+  get bytes () {
+    this._bytes ||= new Uint8Array(this.buffer).slice(...this.pos)
+    return this._bytes
+  }
+
+  get string () {
+    return this.uint.toString()
+  }
+
+  get bool () {
+    return !!this.uint
+  }
+}
+
+export class ReaderMessage {
+  constructor (buffer) {
+    this.type = wireTypes.LEN
+
+    if (buffer instanceof ArrayBuffer) {
+      this.buffer = buffer
+    } else if (buffer instanceof Array) {
+      this.buffer = new Uint8Array(buffer).buffer
+    } else if (buffer instanceof Uint8Array) {
+      this.buffer = buffer.buffer
+    }
+
+    this.offset = 0
+    this.fields = {}
+
+    this.bytes = new Uint8Array(this.buffer)
+
+    try {
+      while (this.offset < this.buffer.byteLength) {
+        const indexType = parseInt(this.readVarInt())
+        const type = indexType & 7
+        const index = indexType >> 3
+        this.fields[index] ||= 0
+        this.fields[index]++
+
+        if (type === wireTypes.VARINT) {
+          const s = this.offset
+          const value = parseInt(this.readVarInt())
+          this[index] ||= []
+          const reader = new ReaderVarInt(this.buffer.slice(s, this.offset), value)
+          reader.pos = [s, this.offset]
+          reader.index = index
+          this[index].push(reader)
+        }
+
+        if (type === wireTypes.LEN) {
+          this[index] ||= []
+          const byteLength = this.readVarInt()
+          const reader = new ReaderMessage(this.buffer.slice(this.offset, this.offset + byteLength))
+          reader.pos = [this.offset, this.offset + byteLength]
+          reader.index = index
+          this[index].push(reader)
+          this.offset += byteLength
+        }
+
+        // TODO wireTypes.SGROUP
+
+        if (type === wireTypes.I64) {
+          this[index] ||= []
+          const reader = new ReaderFixed64(this.buffer.slice(this.offset, this.offset + 8))
+          reader.pos = [this.offset, this.offset + 8]
+          reader.index = index
+          this[index].push(reader)
+          this.offset += 8
+        }
+
+        if (type === wireTypes.I32) {
+          this[index] ||= []
+          const reader = new ReaderFixed32(this.buffer.slice(this.offset, this.offset + 4))
+          reader.pos = [this.offset, this.offset + 4]
+          reader.index = index
+          this[index].push(reader)
+          this.offset += 4
+        }
+      }
+    } catch (e) {
+      this.offset = 0
+    }
+  }
+
   readVarInt () {
     let result = 0
     let shift = 0
     let byte
     do {
-      if (this.offset >= this.buffer.length) {
-        throw new Error('Buffer overflow while reading varint')
+      if (this.offset >= this.buffer.byteLength) {
+        throw new Error(`Buffer overflow while reading varint: ${this.offset}/${this.buffer.byteLength}`)
       }
-      byte = this.buffer[this.offset++]
+      byte = this.bytes[this.offset++]
       result |= (byte & 0x7f) << shift
       shift += 7
     } while (byte >= 0x80)
     return result
   }
 
-  // read a portion of the buffer, at offset
-  readBuffer (length) {
-    if (this.offset + length > this.buffer.length) {
-      throw new Error(`Buffer overflow while reading buffer ${length} bytes`)
-    }
-    const result = this.buffer.slice(this.offset, this.offset + length)
-    this.offset += length
-    return result
+  // lazy-load representations other than this.buffer (ArrayBuffer)
+  get raw () {
+    return this
   }
 
-  // read a group for index number (from current offset)
-  readGroup (index) {
-    const offsetStart = this.offset
-    let indexType = parseInt(this.readVarInt())
-    let type = indexType & 0b111
-    while (type !== wireTypes.EGROUP) {
-      indexType = parseInt(this.readVarInt())
-      type = indexType & 0b111
-    }
-    return this.buffer.slice(offsetStart, this.offset)
+  get string () {
+    this._string ||= dec.decode(this.buffer)
+    return this._string
   }
 
-  handleField (type, index, prefix = '') {
-    const path = prefix ? `${prefix}.${index}` : index.toString()
-
-    // choose first renderType as default, if choice not set
-    let renderType = this.choices[path]
-    if (!renderType) {
-      if (wireMap[type]) {
-        renderType = wireMap[type][0]
-      }
+  get packedIntVar () {
+    if (typeof this._packedintvar !== 'undefined') {
+      return this._packedintvar
     }
-
-    const newrec = { path, type, index, pos: [this.offset], renderType }
-
-    if (type === wireTypes.SGROUP || type === wireTypes.EGROUP || type > wireTypes.I32) {
-      delete newrec.renderType
-    }
-
-    switch (type) {
-      case wireTypes.VARINT:
-        newrec.value = this.readVarInt()
-        newrec.pos.push(this.offset)
-        return newrec
-      case wireTypes.I64:
-        newrec.value = this.readBuffer(8)
-        newrec.pos.push(this.offset)
-        return newrec
-      case wireTypes.LEN:
-        newrec.value = this.readBuffer(this.readVarInt())
-        newrec.value = decoders.getValue(newrec, renderType)
-        newrec.pos.push(this.offset)
-
-        if (renderType === 'bytes') {
-        // try to guess the type & pre-parse the sub-message
-          try {
-            const reader = new RawProto(newrec.value, removePathPrefix(this.choices, path))
-            newrec.parsed = reader.readMessage()
-            newrec.reader = reader
-            newrec.renderType = 'sub'
-          } catch (e) {
-            // check if it is likely a string
-            for (const b of newrec.value) {
-              if (b < 32) {
-                newrec.parsed = newrec.value
-                newrec.renderType = 'bytes'
-                return newrec
-              }
-            }
-            newrec.parsed = decoders.getValue(newrec, 'string')
-            newrec.renderType = 'string'
-          }
-        }
-
-        return newrec
-      case wireTypes.SGROUP:
-        // just get bytes
-        newrec.value = this.readGroup(index)
-        newrec.pos.push(this.offset)
-        return newrec
-      case wireTypes.EGROUP:
-        // I don't think think I should hit this one
-        return
-      case wireTypes.I32:
-        newrec.value = this.readBuffer(4)
-        newrec.pos.push(this.offset)
-        return newrec
-      default:
-        throw new Error(`Unknown wireType: ${type}`)
-    }
-  }
-
-  // read 1 level of LEN message field
-  readMessage (prefix = '') {
-    const out = []
-    while (this.offset < this.buffer.length) {
-      const indexType = parseInt(this.readVarInt())
-      const r = this.handleField(indexType & 0b111, indexType >> 3, prefix)
-      if (r) {
-        out.push(r)
-      }
-    }
-    return out
-  }
-
-  // These are wrapopers around other utils that could be used seperately
-
-  query (path, prefix = '') {
+    this._packedintvar = []
     this.offset = 0
-    this.tree ||= this.readMessage(prefix)
-    this.offset = 0
-    return query(this.tree, path, this.choices, prefix)
-  }
-
-  walk (callback, prefix = '', doString = false) {
-    return walk(this, callback, prefix, doString)
-  }
-
-  toJS (prefix = '') {
-    // here I just use a common walker to output js for the tree
-    return this.walk(walkerJS, prefix)
-  }
-
-  toJSON (...args) {
-    return this.toJS(...args)
-  }
-
-  toProto (prefix = '') {
-    this.offset = 0
-    this.tree ||= this.readMessage(prefix)
-    this.offset = 0
-
-    const out = []
-    for (const field of this.tree) {
-      out.push(decoders.getProto(field, field.renderType, prefix.split('.').length))
+    while (this.offset < this.buffer.byteLength) {
+      this._packedintvar.push(this.readVarInt())
     }
+    return this._packedintvar
+  }
 
-    return out.join('\n')
+  get packedInt32 () {
+    if (typeof this._packedint32 !== 'undefined') {
+      return this._packedint32
+    }
+    this.dataView ||= new DataView(this.buffer)
+    this._packedint32 = []
+    this.offset = 0
+    while (this.offset < this.buffer.byteLength) {
+      this._packedint32.push(this.dataView.getInt32(this.offset, true))
+      this.offset += 4
+    }
+    return this._packedint32
+  }
+
+  get packedInt64 () {
+    if (typeof this._packedint64 !== 'undefined') {
+      return this._packedint64
+    }
+    this.dataView ||= new DataView(this.buffer)
+    this._packedint64 = []
+    this.offset = 0
+    while (this.offset < this.buffer.byteLength) {
+      this._packedint32.push(this.dataView.getInt64(this.offset, true))
+      this.offset += 8
+    }
+    return this._packedint64
   }
 }
 
-// simple util to remove a prefix from an object keyed by flat paths (like choices)
-export const removePathPrefix = (choices = {}, path = '') =>
-  Object.keys(choices).reduce((a, v, i) => {
-    return { ...a, [v.replace(new RegExp(`^${path}\.`), '')]: choices[v] }
-  }, {})
-
-// walk over a tree recursivley calling callback on each item, each field is outputted as an array, eah message is an object
-export function walk (reader, callback, prefix = '', doString) {
-  reader.offset = 0
-  reader.tree ||= reader.readMessage(prefix)
-  reader.offset = 0
-  const out = {}
-  for (const field of reader.tree) {
-    out[field.index] ||= []
-    const path = prefix ? `${prefix}.${field.index}` : field.index.toString()
-    // handle sub-messages in LEN
-    if (field.renderType === 'sub' && field.reader) {
-      out[field.index].push(walk(field.reader, callback, path, doString))
-    } else {
-      out[field.index].push(callback(field, path, reader, callback))
-    }
-  }
-  return doString ? Object.values(out).join('\n') : out
-}
-
-// walker that will apply default transforms to every field
-export function walkerJS (field, path, reader, callback) {
-  return decoders.getValue(field, field.renderType)
-}
-
-export default RawProto
+export default ReaderMessage
