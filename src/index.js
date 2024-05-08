@@ -189,16 +189,21 @@ export class ReaderMessage {
   }
 
   // utils
-  query (q) {}
 
-  walk (callback) {}
+  // use string-queries to get data, without walking all messages
+  query (q, typeMap = {}, nameMap = {}) {}
 
-  toJS () {
-    return this.walk(walkerJS)
+  // apply a callback to every field
+  walk (callback, typeMap = {}, nameMap = {}, prefix = '') {}
+
+  // output JSON-compat object for this message
+  toJS (typeMap = {}, nameMap = {}, prefix = '') {
+    return this.walk(walkerJS, typeMap, nameMap)
   }
 
-  toProto () {
-    return this.walk(walkerProto)
+  // output string of .proto SDL for this message
+  toProto (typeMap = {}, nameMap = {}, prefix = '') {
+    return this.walk(walkerProto, typeMap, nameMap)
   }
 
   // lazy-load representations other than this.buffer (ArrayBuffer)
@@ -253,6 +258,8 @@ export class ReaderMessage {
 }
 
 export default ReaderMessage
+
+// helpers, to cut down on code-duplication
 
 export function walkerJS (field) {}
 
