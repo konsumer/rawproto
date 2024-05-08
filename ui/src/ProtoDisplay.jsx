@@ -44,8 +44,8 @@ function ProtoField (field) {
           <p>
             {decoders.display(field)}
           </p>
-          <p>
-            {`${wireLabels[field.type]} as ${parseLabels[field.renderType]}`}
+          <p className='text-xs neutral-content/50'>
+            {`${wireLabels[field.type]}`}
           </p>
         </div>
       </Linkify>
@@ -62,10 +62,9 @@ export default function ProtoDisplay ({ className, fields }) {
   return (
     <ul className={className}>
       {fields.map((field) => {
-        const Field = ProtoField
         return (
           <li key={field.index} title={`${wireLabels[field.type]} as ${parseLabels[field.renderType]}`}>
-            <Field {...field} />
+            <ProtoField {...field} />
           </li>
         )
       })}
