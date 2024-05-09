@@ -132,7 +132,6 @@ describe('Mapping', () => {
       expect(field.path).toBeDefined()
       expect(field.type).toBeDefined()
       expect(field.value).toBeDefined()
-      return { path: `${field.path}:${field.type}:${field.renderType}`, value: field.value }
     })
     expect(counter).toEqual(1969)
   })
