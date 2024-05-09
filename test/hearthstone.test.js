@@ -121,3 +121,24 @@ describe('Queries', () => {
     expect(widths.length).toEqual(7)
   })
 })
+
+describe('Mapping', () => {
+  test('make sure all members of fields are defined', () => {
+    let counter = 0
+    appTree.walk(field => {
+      counter++
+      expect(field.renderType).toBeDefined()
+      expect(field.name).toBeDefined()
+      expect(field.path).toBeDefined()
+      expect(field.type).toBeDefined()
+      expect(field.value).toBeDefined()
+      return { path: `${field.path}:${field.type}:${field.renderType}`, value: field.value }
+    })
+    expect(counter).toEqual(1969)
+  })
+
+  test.skip('toJS', () => {
+    const r = appTree.toJS()
+    console.log(r)
+  })
+})

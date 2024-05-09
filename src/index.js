@@ -314,21 +314,21 @@ export class ReaderMessage {
       try {
         value = field[renderType]
       } catch (e) {}
-      return cb({ renderType, name, path, type, value })
+      cb({ renderType, name, path, type, value })
     })
   }
 
   // output JSON-compat object for this message
   toJS (typeMap = {}, nameMap = {}) {
     this.walk(field => {
-
+      // TODO
     }, typeMap, nameMap)
   }
 
   // output string of .proto SDL for this message
   toProto (typeMap = {}, nameMap = {}) {
     this.walk(field => {
-
+      // TODO
     }, typeMap, nameMap)
   }
 }
