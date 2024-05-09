@@ -34,9 +34,6 @@ You can use it in code like this:
 import { readFile } from 'fs/promises'
 import RawProto from 'rawproto'
 
-// you can also pull utils for doing your own thing
-import { walkerJS, walkerProto } from 'rawproto'
-
 // load proto
 const proto = new RawProto(await readFile('data.pb'))
 
@@ -47,11 +44,9 @@ console.log(proto.query('1.2.4.10.5:string'))
 console.log(proto['1'][0]['2'][0]['4'][0]['10'].map(r => r['5'][0].string ))
 
 // guess to decode as JS object
-// this is same as proto.walk(walkerJS)
 console.log(proto.toJS())
 
 // guess to generate .proto file string
-// this is same as proto.walk(walkerProto)
 console.log(proto.toProto())
 
 // walk over all fields recursively, calling your callback.
