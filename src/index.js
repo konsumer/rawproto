@@ -17,10 +17,11 @@ export const wireMap = {
 }
 
 export class ReaderFixed {
-  constructor (buffer, type) {
+  constructor (buffer, type, path) {
     this.buffer = buffer
     this.type = type
     this.dataView = new DataView(this.buffer)
+    this.path = path
   }
 
   // lazy-load representations other than this.buffer (ArrayBuffer)
@@ -39,8 +40,8 @@ export class ReaderFixed {
 }
 
 export class ReaderFixed64 extends ReaderFixed {
-  constructor (buffer) {
-    super(buffer, wireTypes.I64)
+  constructor (buffer, path) {
+    super(buffer, wireTypes.I64, path)
   }
 
   // lazy-load representations other than this.buffer (ArrayBuffer)
@@ -58,8 +59,8 @@ export class ReaderFixed64 extends ReaderFixed {
 }
 
 export class ReaderFixed32 extends ReaderFixed {
-  constructor (buffer) {
-    super(buffer, wireTypes.I64)
+  constructor (buffer, path) {
+    super(buffer, wireTypes.I64, path)
   }
 
   // lazy-load representations other than this.buffer (ArrayBuffer)
@@ -77,11 +78,12 @@ export class ReaderFixed32 extends ReaderFixed {
 }
 
 export class ReaderVarInt {
-  constructor (buffer, value) {
+  constructor (buffer, value, path) {
     this.type = wireTypes.VARINT
     this.buffer = buffer
     this.uint = value
     this.int = value
+    this.path = path
   }
 
   // lazy-load representations other than this.buffer (ArrayBuffer)
@@ -104,8 +106,9 @@ export class ReaderVarInt {
 }
 
 export class ReaderMessage {
-  constructor (buffer) {
+  constructor (buffer, path = '0') {
     this.type = wireTypes.LEN
+    this.path = path
 
     if (buffer instanceof ArrayBuffer) {
       this.buffer = buffer
@@ -119,6 +122,7 @@ export class ReaderMessage {
     this.fields = {}
 
     this.bytes = new Uint8Array(this.buffer)
+    // this.string = dec.decode(this.bytes)
 
     try {
       while (this.offset < this.buffer.byteLength) {
@@ -132,48 +136,67 @@ export class ReaderMessage {
           const s = this.offset
           const value = parseInt(this.readVarInt())
           this[index] ||= []
-          const reader = new ReaderVarInt(this.buffer.slice(s, this.offset), value)
-          reader.pos = [s, this.offset]
-          reader.index = index
+          const reader = new ReaderVarInt(this.buffer.slice(s, this.offset), value, [this.path, index].join('.'))
           this[index].push(reader)
         }
 
         if (type === wireTypes.LEN) {
           this[index] ||= []
           const byteLength = this.readVarInt()
-          const reader = new ReaderMessage(this.buffer.slice(this.offset, this.offset + byteLength))
-          reader.pos = [this.offset, this.offset + byteLength]
-          reader.index = index
+          const reader = new ReaderMessage(this.buffer.slice(this.offset, this.offset + byteLength), [this.path, index].join('.'))
           this[index].push(reader)
           this.offset += byteLength
         }
 
-        // TODO wireTypes.SGROUP
+        if (type === wireTypes.SGROUP) {
+          this[index] ||= []
+          const reader = new ReaderMessage(this.readBufferUntilGroupEnd(index), [this.path, index].join('.'))
+          this[index].push(reader)
+        }
 
         if (type === wireTypes.I64) {
           this[index] ||= []
-          const reader = new ReaderFixed64(this.buffer.slice(this.offset, this.offset + 8))
-          reader.pos = [this.offset, this.offset + 8]
-          reader.index = index
+          const reader = new ReaderFixed64(this.buffer.slice(this.offset, this.offset + 8), [this.path, index].join('.'))
           this[index].push(reader)
           this.offset += 8
         }
 
         if (type === wireTypes.I32) {
           this[index] ||= []
-          const reader = new ReaderFixed32(this.buffer.slice(this.offset, this.offset + 4))
-          reader.pos = [this.offset, this.offset + 4]
-          reader.index = index
+          const reader = new ReaderFixed32(this.buffer.slice(this.offset, this.offset + 4), [this.path, index].join('.'))
           this[index].push(reader)
           this.offset += 4
         }
       }
-    } catch (e) {
-      this.offset = 0
+    } catch (e) {}
+
+    // only used for parsing, so it may be misleading
+    delete this.offset
+  }
+
+  readBufferUntilGroupEnd (index) {
+    const offsetStart = this.offset
+    let indexType = parseInt(this.readVarInt())
+    let type = indexType & 7
+    let foundIndex = index
+
+    while (type !== wireTypes.EGROUP) {
+      indexType = parseInt(this.readVarInt())
+      type = indexType & 7
+      foundIndex = indexType >> 3
     }
+
+    if (foundIndex !== index) {
+      throw new Error(`Group index ${foundIndex} should match ${index}`)
+    }
+
+    return this.buffer.slice(offsetStart, this.offset)
   }
 
   readVarInt () {
+    if (typeof this.offset === 'undefined') {
+      throw new Error('offset must be defined to use readVarInt. If you really want to do this, try setting it to 0.')
+    }
     let result = 0
     let shift = 0
     let byte
@@ -188,31 +211,13 @@ export class ReaderMessage {
     return result
   }
 
-  // utils
-
-  // use string-queries to get data, without walking all messages
-  query (q, typeMap = {}, nameMap = {}) {}
-
-  // apply a callback to every field
-  walk (callback, typeMap = {}, nameMap = {}, prefix = '') {}
-
-  // output JSON-compat object for this message
-  toJS (typeMap = {}, nameMap = {}, prefix = '') {
-    return this.walk(walkerJS, typeMap, nameMap)
-  }
-
-  // output string of .proto SDL for this message
-  toProto (typeMap = {}, nameMap = {}, prefix = '') {
-    return this.walk(walkerProto, typeMap, nameMap)
-  }
-
   // lazy-load representations other than this.buffer (ArrayBuffer)
   get raw () {
     return this
   }
 
   get string () {
-    this._string ||= dec.decode(this.buffer)
+    this._string ||= dec.decode(this.bytes)
     return this._string
   }
 
@@ -254,6 +259,69 @@ export class ReaderMessage {
       this.offset += 8
     }
     return this._packedint64
+  }
+
+  // this will create a flat array of all recursive fields
+  get flat () {
+    if (this._flat) {
+      return this._flat
+    }
+
+    this._flat = [this]
+    for (const field of Object.keys(this.fields)) {
+      const fs = Array.isArray(this[field]) ? this[field] : [this[field]]
+      for (const f of fs) {
+        if (f) {
+          if (f.type === wireTypes.LEN) {
+            this._flat.push(...f.flat)
+          } else {
+            this._flat.push(f)
+          }
+        }
+      }
+    }
+    this._flat = this._flat.filter(f => f)
+    return this._flat
+  }
+
+  // utils
+
+  // use string-queries to get data, without walking all messages (just those in query)
+  query (q) {
+    const [p, type = 'raw'] = q.split(':')
+    const pp = p.split('.').map((i) => parseInt(i))
+
+    // all queries start at top of message
+    if (pp[0] === 0) {
+      pp.shift()
+    }
+
+    pp.unshift(this.path)
+
+    // they are trying to get something from root
+    if (pp.length === 1) {
+      return this[type]
+    }
+
+    const matches = this.flat.filter(f => f.path === pp.join('.'))
+    return matches.map((i) => i[type])
+  }
+
+  searchString (q) {
+    return this.flat.filter(f => f.type === wireTypes.LEN && f.string.includes(q))
+  }
+
+  // apply a callback to every field
+  walk (callback, typeMap = {}, nameMap = {}, prefix = '') {}
+
+  // output JSON-compat object for this message
+  toJS (typeMap = {}, nameMap = {}, prefix = '') {
+    return this.walk(walkerJS, typeMap, nameMap)
+  }
+
+  // output string of .proto SDL for this message
+  toProto (typeMap = {}, nameMap = {}, prefix = '') {
+    return this.walk(walkerProto, typeMap, nameMap)
   }
 }
 

@@ -70,7 +70,7 @@ Protobuf encodes several different possible types for every wire-type. In this l
 ```
 VARINT - int, bool
 FIXED64 - uint, int, bytes, float
-LEN - string, bytes, packedvarint, packedint32, packedint64
+LEN - string, bytes, packedIntVar, packedInt32, packedInt64, flat
 FIXED32 - int, uint, bytes, float
 ```
 
