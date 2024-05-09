@@ -15,7 +15,7 @@ describe('Basic Init', () => {
     expect(tree.buffer).toEqual(u.buffer)
     expect(tree.bytes).toEqual(u)
     expect(tree.string).toEqual('�')
-    expect(tree['1'][0].int).toEqual(150)
+    expect(tree.sub['1'][0].int).toEqual(150)
   })
 
   test('Uint8Array', () => {
@@ -30,7 +30,7 @@ describe('Basic Init', () => {
     expect(tree.buffer).toEqual(u.buffer)
     expect(tree.bytes).toEqual(u)
     expect(tree.string).toEqual('�')
-    expect(tree['1'][0].int).toEqual(150)
+    expect(tree.sub['1'][0].int).toEqual(150)
   })
 
   test('Array', () => {
@@ -45,7 +45,7 @@ describe('Basic Init', () => {
     expect(tree.buffer).toEqual(u.buffer)
     expect(tree.bytes).toEqual(u)
     expect(tree.string).toEqual('�')
-    expect(tree['1'][0].int).toEqual(150)
+    expect(tree.sub['1'][0].int).toEqual(150)
   })
 })
 
@@ -55,7 +55,7 @@ describe('Length-Delimited Records', () => {
     2: {"testing"}
   */
     const tree = new RawProto([0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67])
-    expect(tree['2'][0].string).toEqual('testing')
+    expect(tree.sub['2'][0].string).toEqual('testing')
   })
 
   test('Sub-message', () => {
@@ -63,7 +63,7 @@ describe('Length-Delimited Records', () => {
     3: {1: 150}
   */
     const tree = new RawProto([0x1a, 0x03, 0x08, 0x96, 0x01])
-    expect(tree['3'][0]['1'][0].int).toEqual(150)
+    expect(tree.sub['3'][0].sub['1'][0].int).toEqual(150)
   })
 
   test('Packed Repeated Fields', () => {
@@ -71,7 +71,7 @@ describe('Length-Delimited Records', () => {
     6: {3 270 86942}
   */
     const tree = new RawProto([0x32, 0x06, 0x03, 0x8e, 0x02, 0x9e, 0xa7, 0x05])
-    expect(tree['6'][0].packedIntVar).toEqual([3, 270, 86942])
+    expect(tree.sub['6'][0].packedIntVar).toEqual([3, 270, 86942])
   })
 
   test('Repeated Elements', () => {
@@ -85,7 +85,7 @@ describe('Length-Delimited Records', () => {
     // you can get field-index counts
     expect(tree.fields).toEqual({ 4: 1, 5: 3 })
 
-    expect(tree['4'][0].string).toEqual('hello')
-    expect(tree['5'].map(i => i.int)).toEqual([1, 2, 3])
+    expect(tree.sub['4'][0].string).toEqual('hello')
+    expect(tree.sub['5'].map(i => i.int)).toEqual([1, 2, 3])
   })
 })

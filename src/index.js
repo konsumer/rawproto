@@ -20,11 +20,12 @@ export const wireMap = {
 }
 
 export class ReaderFixed {
-  constructor (buffer, type, path) {
+  constructor (buffer, type, path, renderType) {
     this.buffer = buffer
     this.type = type
     this.dataView = new DataView(this.buffer)
     this.path = path
+    this.renderType = renderType || wireMap[this.type][0]
   }
 
   // lazy-load representations other than this.buffer (ArrayBuffer)
@@ -43,8 +44,8 @@ export class ReaderFixed {
 }
 
 export class ReaderFixed64 extends ReaderFixed {
-  constructor (buffer, path) {
-    super(buffer, wireTypes.I64, path)
+  constructor (buffer, path, renderType) {
+    super(buffer, wireTypes.I64, path, renderType)
   }
 
   // lazy-load representations other than this.buffer (ArrayBuffer)
@@ -62,8 +63,8 @@ export class ReaderFixed64 extends ReaderFixed {
 }
 
 export class ReaderFixed32 extends ReaderFixed {
-  constructor (buffer, path) {
-    super(buffer, wireTypes.I64, path)
+  constructor (buffer, path, renderType) {
+    super(buffer, wireTypes.I64, path, renderType)
   }
 
   // lazy-load representations other than this.buffer (ArrayBuffer)
@@ -81,12 +82,13 @@ export class ReaderFixed32 extends ReaderFixed {
 }
 
 export class ReaderVarInt {
-  constructor (buffer, value, path) {
+  constructor (buffer, value, path, renderType) {
     this.type = wireTypes.VARINT
     this.buffer = buffer
     this.uint = value
     this.int = value
     this.path = path
+    this.renderType = renderType || wireMap[this.type][0]
   }
 
   // lazy-load representations other than this.buffer (ArrayBuffer)
@@ -109,9 +111,10 @@ export class ReaderVarInt {
 }
 
 export class ReaderMessage {
-  constructor (buffer, path = '0') {
+  constructor (buffer, path = '0', renderType) {
     this.type = wireTypes.LEN
     this.path = path
+    this.renderType = renderType || wireMap[this.type][0]
 
     if (buffer instanceof ArrayBuffer) {
       this.buffer = buffer
@@ -120,68 +123,8 @@ export class ReaderMessage {
     } else if (buffer instanceof Uint8Array) {
       this.buffer = buffer.buffer
     }
-
-    this.offset = 0
-    this.fields = {}
-    this.flat = []
-
     this.bytes = new Uint8Array(this.buffer)
-
-    try {
-      while (this.offset < this.buffer.byteLength) {
-        const indexType = parseInt(this.readVarInt())
-        const type = indexType & 7
-        const index = indexType >> 3
-        this.fields[index] ||= 0
-        this.fields[index]++
-
-        if (type === wireTypes.VARINT) {
-          const s = this.offset
-          const value = parseInt(this.readVarInt())
-          this[index] ||= []
-          const reader = new ReaderVarInt(this.buffer.slice(s, this.offset), value, [this.path, index].join('.'))
-          this[index].push(reader)
-          this.flat.push(reader)
-        }
-
-        if (type === wireTypes.LEN) {
-          this[index] ||= []
-          const byteLength = this.readVarInt()
-          const reader = new ReaderMessage(this.buffer.slice(this.offset, this.offset + byteLength), [this.path, index].join('.'))
-          this[index].push(reader)
-          this.offset += byteLength
-          this.flat.push(reader)
-          this.flat.push(...reader.flat)
-        }
-
-        if (type === wireTypes.SGROUP) {
-          this[index] ||= []
-          const reader = new ReaderMessage(this.readBufferUntilGroupEnd(index), [this.path, index].join('.'))
-          this[index].push(reader)
-          this.flat.push(reader)
-          this.flat.push(...reader.flat)
-        }
-
-        if (type === wireTypes.I64) {
-          this[index] ||= []
-          const reader = new ReaderFixed64(this.buffer.slice(this.offset, this.offset + 8), [this.path, index].join('.'))
-          this[index].push(reader)
-          this.offset += 8
-          this.flat.push(reader)
-        }
-
-        if (type === wireTypes.I32) {
-          this[index] ||= []
-          const reader = new ReaderFixed32(this.buffer.slice(this.offset, this.offset + 4), [this.path, index].join('.'))
-          this[index].push(reader)
-          this.offset += 4
-          this.flat.push(reader)
-        }
-      }
-    } catch (e) {}
-
-    // only used for parsing, so it may be misleading
-    delete this.offset
+    this.offset = 0
   }
 
   readBufferUntilGroupEnd (index) {
@@ -221,7 +164,90 @@ export class ReaderMessage {
     return result
   }
 
+  // is it possible this is a message?
+  couldHaveSub () {
+    const sub = this.sub
+    if (Object.keys(sub).length > 0) {
+      return true
+    }
+    return false
+  }
+
   // lazy-load representations other than this.buffer (ArrayBuffer)
+
+  get fields () {
+    if (this._fields) {
+      return this._fields
+    }
+
+    // sub triggers field-analysis
+    const s = this.sub
+    return this._fields
+  }
+
+  get sub () {
+    if (this._sub) {
+      return this._sub
+    }
+
+    this.offset = 0
+    this._fields = {}
+    this._sub = {}
+
+    let rollbackOffset = this.offset
+
+    try {
+      while (this.offset < this.buffer.byteLength) {
+        const indexType = parseInt(this.readVarInt())
+        const type = indexType & 7
+        const index = indexType >> 3
+        this._fields[index] ||= 0
+        this._fields[index]++
+        this._sub[index] ||= []
+
+        if (type === wireTypes.VARINT) {
+          const s = this.offset
+          const value = parseInt(this.readVarInt())
+          const reader = new ReaderVarInt(this.buffer.slice(s, this.offset), value, [this.path, index].join('.'))
+          this._sub[index].push(reader)
+          rollbackOffset = this.offset
+        }
+
+        if (type === wireTypes.LEN) {
+          const byteLength = this.readVarInt()
+          const reader = new ReaderMessage(this.buffer.slice(this.offset, this.offset + byteLength), [this.path, index].join('.'))
+          this.offset += byteLength
+          this._sub[index].push(reader)
+          rollbackOffset = this.offset
+        }
+
+        if (type === wireTypes.SGROUP) {
+          const reader = new ReaderMessage(this.readBufferUntilGroupEnd(index), [this.path, index].join('.'))
+          this._sub[index].push(reader)
+          rollbackOffset = this.offset
+        }
+
+        if (type === wireTypes.I64) {
+          const reader = new ReaderFixed64(this.buffer.slice(this.offset, this.offset + 8), [this.path, index].join('.'))
+          this.offset += 8
+          this._sub[index].push(reader)
+          rollbackOffset = this.offset
+        }
+
+        if (type === wireTypes.I32) {
+          const reader = new ReaderFixed32(this.buffer.slice(this.offset, this.offset + 4), [this.path, index].join('.'))
+          this.offset += 4
+          this._sub[index].push(reader)
+          rollbackOffset = this.offset
+        }
+      }
+      return this._sub
+    } catch (e) {
+      this.remainder = this.buffer.slice(rollbackOffset)
+      return {}
+    }
+  }
+
   get raw () {
     return this
   }
@@ -275,61 +301,42 @@ export class ReaderMessage {
 
   // use string-queries to get data, without walking all messages (just those in query)
   query (q) {
-    const [p, type = 'raw'] = q.split(':')
-    const pp = p.split('.').map((i) => parseInt(i))
-
-    // all queries start at top of message
-    if (pp[0] === 0) {
-      pp.shift()
+    const [path, type = 'raw'] = q.split(':')
+    const p = path.split('.')
+    if (p.length === 1) {
+      return this.sub[path].map(i => i[type])
     }
-
-    pp.unshift(this.path)
-
-    // they are trying to get something from root
-    if (pp.length === 1) {
-      return this[type]
+    const subq = `${p.slice(1).join('.')}:${type}`
+    if (this.sub[p[0]]) {
+      return this.sub[p[0]].map(m => m.query(subq)).reduce((a, c) => [...a, ...c], []).filter(m => typeof m !== 'undefined')
+    } else {
+      return []
     }
-
-    const matches = this.flat.filter(f => f.path === pp.join('.'))
-    return matches.map((i) => i[type])
-  }
-
-  searchString (q) {
-    return this.flat.filter(f => f.type === wireTypes.LEN && f.string.includes(q))
   }
 
   // apply a callback to every field
   walk (cb, typeMap = {}, nameMap = {}) {
-    return this.flat.map(field => {
-      let renderType = wireMap[field.type][0]
-      let name = field.path.at(-1)
-      if (typeMap[field.path]) {
-        renderType = typeMap[field.path]
+    for (const flist of Object.values(this.sub)) {
+      for (const field of flist) {
+        field.name = nameMap[field.path] || field.path
+        cb(field)
+        if (field.type === wireTypes.LEN) {
+          field.walk(cb, typeMap, nameMap)
+        }
       }
-      if (nameMap[field.path]) {
-        name = nameMap[field.path]
-      }
-      const { path, type } = field
-      let value = 0
-      try {
-        value = field[renderType]
-      } catch (e) {}
-      cb({ renderType, name, path, type, value })
-    })
+    }
   }
 
   // output JSON-compat object for this message
   toJS (typeMap = {}, nameMap = {}) {
-    this.walk(field => {
-      // TODO
-    }, typeMap, nameMap)
+    const out = {}
+    return out
   }
 
   // output string of .proto SDL for this message
   toProto (typeMap = {}, nameMap = {}) {
-    this.walk(field => {
-      // TODO
-    }, typeMap, nameMap)
+    const out = []
+    return out.join('\n')
   }
 }
 

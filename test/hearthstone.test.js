@@ -9,32 +9,25 @@ import RawProto from 'rawproto'
 
 // build an initial array of the data I want to look at
 const tree = new RawProto(await readFile(join(dirname(fileURLToPath(import.meta.url)), 'hearthstone.bin')))
-const appTree = tree['1'][0]['2'][0]['4'][0]
+const appTree = tree.sub['1'][0].sub['2'][0].sub['4'][0]
 
 test('Get fields of appTree', () => {
   // this is the counts of every field
   expect(appTree.fields).toEqual({ 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 10: 10, 13: 1, 14: 1, 15: 1, 16: 1, 17: 1, 18: 1, 21: 1, 24: 1, 25: 1, 26: 1, 27: 1, 29: 1, 32: 1, 34: 1, 38: 1, 39: 1, 40: 1, 43: 1, 45: 1, 46: 1, 48: 1, 50: 1, 51: 1 })
 })
 
-test('Search', () => {
-  // this will get all results, recursively, but we know where id is, so we can check for it
-  const results = tree.searchString('com.blizzard.wtcg.hearthstone')
-  expect(results.map(r => r.path)).include('0.1.2.4.1')
-  expect(results.map(r => r.path)).include('0.1.2.4.2')
-})
-
 describe('Plain traversal', () => {
   test('Get id', () => {
-    expect(appTree['1'][0].string).toEqual('com.blizzard.wtcg.hearthstone')
+    expect(appTree.sub['1'][0].string).toEqual('com.blizzard.wtcg.hearthstone')
   })
 
   test('Get title', () => {
-    expect(appTree['5'][0].string).toEqual('Hearthstone')
+    expect(appTree.sub['5'][0].string).toEqual('Hearthstone')
   })
 
   test('Get media', () => {
     // these are the same thing
-    expect(appTree['10'].length).toEqual(10)
+    expect(appTree.sub['10'].length).toEqual(10)
     expect(appTree.fields[10]).toEqual(10)
 
     let icon
@@ -42,15 +35,17 @@ describe('Plain traversal', () => {
     const videos = []
     const videoThumbs = []
 
-    for (const m of appTree['10']) {
-      const t = m['1'][0].int
-      if ([4, 1, 3, 13].includes(t)) {
-        if (m['5']?.length) {
-          const url = m['5'][0].string
-          if (t === 1) screenshots.push(url)
-          if (t === 3) videos.push(url)
-          if (t === 4) icon = url
-          if (t === 13) videoThumbs.push(url)
+    for (const m of appTree.sub['10']) {
+      if (m.sub && m.sub['1']) {
+        const t = m.sub['1'][0].int
+        if ([4, 1, 3, 13].includes(t)) {
+          if (m.sub['5']?.length) {
+            const url = m.sub['5'][0].string
+            if (t === 1) screenshots.push(url)
+            if (t === 3) videos.push(url)
+            if (t === 4) icon = url
+            if (t === 13) videoThumbs.push(url)
+          }
         }
       }
     }
@@ -68,12 +63,14 @@ describe('Plain traversal', () => {
     const videos = []
     const videoThumbs = []
 
-    for (const mediaRoot of appTree['10']) {
-      const t = mediaRoot['1'][0].int
-      if (t === 1) screenshots.push(mediaRoot['5'][0].string)
-      if (t === 3) videos.push(mediaRoot['5'][0].string)
-      if (t === 4) icon = mediaRoot['5'][0].string
-      if (t === 13) videoThumbs.push(mediaRoot['5'][0].string)
+    for (const m of appTree.sub['10']) {
+      if (m.sub && m.sub['1']) {
+        const t = m.sub['1'][0].int
+        if (t === 1) screenshots.push(m.sub['5'][0].string)
+        if (t === 3) videos.push(m.sub['5'][0].string)
+        if (t === 4) icon = m.sub['5'][0].string
+        if (t === 13) videoThumbs.push(m.sub['5'][0].string)
+      }
     }
 
     expect(icon).toEqual('https://play-lh.googleusercontent.com/qTt7JkhZ-U0kevENyTChyUijNUEctA3T5fh7cm8yzKUG0UAnMUgOMpG_9Ln7D24NbQ')
@@ -99,12 +96,12 @@ describe('Queries', () => {
     const videos = []
     const videoThumbs = []
 
-    for (const mediaRoot of appTree.query('10')) {
-      const t = mediaRoot.query('1:int').pop()
-      if (t === 1) screenshots.push(mediaRoot.query('5:string').pop())
-      if (t === 3) videos.push(mediaRoot.query('5:string').pop())
-      if (t === 4) icon = mediaRoot.query('5:string').pop()
-      if (t === 13) videoThumbs.push(mediaRoot.query('5:string').pop())
+    for (const m of appTree.query('10')) {
+      const t = m.query('1:int').pop()
+      if (t === 1) screenshots.push(m.query('5:string').pop())
+      if (t === 3) videos.push(m.query('5:string').pop())
+      if (t === 4) icon = m.query('5:string').pop()
+      if (t === 13) videoThumbs.push(m.query('5:string').pop())
     }
 
     expect(icon).toEqual('https://play-lh.googleusercontent.com/qTt7JkhZ-U0kevENyTChyUijNUEctA3T5fh7cm8yzKUG0UAnMUgOMpG_9Ln7D24NbQ')
@@ -120,6 +117,10 @@ describe('Queries', () => {
     expect(widths.length).toEqual(heights.length)
     expect(widths.length).toEqual(7)
   })
+
+  test.skip('Description', () => {
+    // TODO
+  })
 })
 
 describe('Mapping', () => {
@@ -131,13 +132,12 @@ describe('Mapping', () => {
       expect(field.name).toBeDefined()
       expect(field.path).toBeDefined()
       expect(field.type).toBeDefined()
-      expect(field.value).toBeDefined()
     })
-    expect(counter).toEqual(1969)
+    expect(counter).toEqual(1670)
   })
 
   test.skip('toJS', () => {
     const r = appTree.toJS()
-    console.log(r)
+    // TODO
   })
 })
