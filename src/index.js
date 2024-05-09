@@ -1,3 +1,6 @@
+
+// TODO: flat makes it easier to do things, but is pretty big copy.
+
 export const wireTypes = {
   VARINT: 0, //  int32, int64, uint32, uint64, sint32, sint64, bool, enum
   I64: 1, // fixed64, sfixed64, double
@@ -12,7 +15,7 @@ const dec = new TextDecoder()
 export const wireMap = {
   0: ['int', 'bool', 'raw'],
   1: ['int', 'uint', 'bytes', 'float', 'raw'],
-  2: ['bytes', 'string', 'sub', 'packedvarint', 'packedint32', 'packedint64', 'raw'],
+  2: ['raw', 'bytes', 'string', 'sub', 'packedvarint', 'packedint32', 'packedint64'],
   5: ['int', 'uint', 'bytes', 'float', 'raw']
 }
 
@@ -65,11 +68,11 @@ export class ReaderFixed32 extends ReaderFixed {
 
   // lazy-load representations other than this.buffer (ArrayBuffer)
   get uint () {
-    return this.dataView.getBigUint32(0, true)
+    return this.dataView.getUint32(0, true)
   }
 
   get int () {
-    return this.dataView.getBigInt32(0, true)
+    return this.dataView.getInt32(0, true)
   }
 
   get float () {
@@ -120,9 +123,9 @@ export class ReaderMessage {
 
     this.offset = 0
     this.fields = {}
+    this.flat = []
 
     this.bytes = new Uint8Array(this.buffer)
-    // this.string = dec.decode(this.bytes)
 
     try {
       while (this.offset < this.buffer.byteLength) {
@@ -138,6 +141,7 @@ export class ReaderMessage {
           this[index] ||= []
           const reader = new ReaderVarInt(this.buffer.slice(s, this.offset), value, [this.path, index].join('.'))
           this[index].push(reader)
+          this.flat.push(reader)
         }
 
         if (type === wireTypes.LEN) {
@@ -146,12 +150,16 @@ export class ReaderMessage {
           const reader = new ReaderMessage(this.buffer.slice(this.offset, this.offset + byteLength), [this.path, index].join('.'))
           this[index].push(reader)
           this.offset += byteLength
+          this.flat.push(reader)
+          this.flat.push(...reader.flat)
         }
 
         if (type === wireTypes.SGROUP) {
           this[index] ||= []
           const reader = new ReaderMessage(this.readBufferUntilGroupEnd(index), [this.path, index].join('.'))
           this[index].push(reader)
+          this.flat.push(reader)
+          this.flat.push(...reader.flat)
         }
 
         if (type === wireTypes.I64) {
@@ -159,6 +167,7 @@ export class ReaderMessage {
           const reader = new ReaderFixed64(this.buffer.slice(this.offset, this.offset + 8), [this.path, index].join('.'))
           this[index].push(reader)
           this.offset += 8
+          this.flat.push(reader)
         }
 
         if (type === wireTypes.I32) {
@@ -166,6 +175,7 @@ export class ReaderMessage {
           const reader = new ReaderFixed32(this.buffer.slice(this.offset, this.offset + 4), [this.path, index].join('.'))
           this[index].push(reader)
           this.offset += 4
+          this.flat.push(reader)
         }
       }
     } catch (e) {}
@@ -261,29 +271,6 @@ export class ReaderMessage {
     return this._packedint64
   }
 
-  // this will create a flat array of all recursive fields
-  get flat () {
-    if (this._flat) {
-      return this._flat
-    }
-
-    this._flat = [this]
-    for (const field of Object.keys(this.fields)) {
-      const fs = Array.isArray(this[field]) ? this[field] : [this[field]]
-      for (const f of fs) {
-        if (f) {
-          if (f.type === wireTypes.LEN) {
-            this._flat.push(...f.flat)
-          } else {
-            this._flat.push(f)
-          }
-        }
-      }
-    }
-    this._flat = this._flat.filter(f => f)
-    return this._flat
-  }
-
   // utils
 
   // use string-queries to get data, without walking all messages (just those in query)
@@ -312,23 +299,38 @@ export class ReaderMessage {
   }
 
   // apply a callback to every field
-  walk (callback, typeMap = {}, nameMap = {}, prefix = '') {}
+  walk (cb, typeMap = {}, nameMap = {}) {
+    return this.flat.map(field => {
+      let renderType = wireMap[field.type][0]
+      let name = field.path.at(-1)
+      if (typeMap[field.path]) {
+        renderType = typeMap[field.path]
+      }
+      if (nameMap[field.path]) {
+        name = nameMap[field.path]
+      }
+      const { path, type } = field
+      let value = 0
+      try {
+        value = field[renderType]
+      } catch (e) {}
+      return cb({ renderType, name, path, type, value })
+    })
+  }
 
   // output JSON-compat object for this message
-  toJS (typeMap = {}, nameMap = {}, prefix = '') {
-    return this.walk(walkerJS, typeMap, nameMap)
+  toJS (typeMap = {}, nameMap = {}) {
+    this.walk(field => {
+
+    }, typeMap, nameMap)
   }
 
   // output string of .proto SDL for this message
-  toProto (typeMap = {}, nameMap = {}, prefix = '') {
-    return this.walk(walkerProto, typeMap, nameMap)
+  toProto (typeMap = {}, nameMap = {}) {
+    this.walk(field => {
+
+    }, typeMap, nameMap)
   }
 }
 
 export default ReaderMessage
-
-// helpers, to cut down on code-duplication
-
-export function walkerJS (field) {}
-
-export function walkerProto (field) {}
