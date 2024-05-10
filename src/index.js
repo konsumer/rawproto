@@ -191,7 +191,7 @@ export class ReaderMessage {
     return this._fields
   }
 
-  // get sub-fields, triggers render (cached)
+  // get sub-fields, triggers sub-render (cached)
   get sub () {
     if (this._sub) {
       return this._sub
@@ -356,6 +356,7 @@ export class ReaderMessage {
         // copy it, so it's not modified in-place
         const field = new fieldReal.constructor(fieldReal.buffer, fieldReal.path, fieldReal.renderType, fieldReal.value)
         field._sub = fieldReal._sub
+        field._fields = fieldReal._fields
 
         field.name = nameMap[field.path] || field.path
         field.renderType = typeMap[field.path] || field.renderType
