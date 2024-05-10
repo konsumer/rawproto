@@ -11,11 +11,15 @@ import RawProto from 'rawproto'
 const tree = new RawProto(await readFile(join(dirname(fileURLToPath(import.meta.url)), 'hearthstone.bin')))
 const appTree = tree.sub['1'][0].sub['2'][0].sub['4'][0]
 
-// for .map(), this will force description to be a string
+// for .map(), this will force types of fields, and give them names in .toJS()
 const queryMap = {
   id: '1.2.4.1:string',
   title: '1.2.4.5:string',
-  description: '1.2.4.7:string'
+  description: '1.2.4.7:string',
+  mediaTypes: '1.2.4.10.1:int',
+  mediaUrls: '1.2.4.10.5:string',
+  mediaWidths: '1.2.4.10.2.3:int',
+  mediaHeights: '1.2.4.10.2.4:int'
 }
 
 test('Get fields of appTree', () => {
@@ -150,6 +154,11 @@ describe('Mapping', () => {
     expect(r.id).toEqual(['com.blizzard.wtcg.hearthstone'])
     expect(r.title).toEqual(['Hearthstone'])
     expect(r.description.length).toEqual(1)
+
+    expect(r.mediaWidths.length).toEqual(r.mediaHeights.length)
+
+    // type 2 does not have URL
+    expect(r.mediaTypes.filter(i => i !== 2).length).toEqual(r.mediaUrls.length)
 
     // this checks to make sure old mapping doesn't taint object
     const r2 = appTree.toJS()

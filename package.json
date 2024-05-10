@@ -15,6 +15,7 @@
     "rawproto": "rawproto_cli.cjs"
   },
   "dependencies": {
+    "flat": "^6.0.1",
     "get-stdin": "^9.0.0",
     "yargs": "^17.7.2"
   },
@@ -36,12 +37,20 @@
     "type": "git",
     "url": "git+https://github.com/konsumer/rawproto.git"
   },
-  "keywords": ["protobuf", "decode", "reverse-engineer", "binary", "raw"],
+  "keywords": [
+    "protobuf",
+    "decode",
+    "reverse-engineer",
+    "binary",
+    "raw"
+  ],
   "author": "David Konsumer <konsumer@jetboystudio.com> (http://konsumer.js.org)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/konsumer/rawproto/issues"
   },
   "homepage": "https://rawproto.konsumer.js.org",
-  "files": ["dist/*"]
+  "files": [
+    "dist/*"
+  ]
 }

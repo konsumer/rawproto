@@ -1,5 +1,4 @@
-
-// TODO: flat makes it easier to do things, but is pretty big copy.
+import { unflatten } from 'flat'
 
 export const wireTypes = {
   VARINT: 0, //  int32, int64, uint32, uint64, sint32, sint64, bool, enum
@@ -391,7 +390,7 @@ export class ReaderMessage {
         } catch (e) {}
       }
     }, typeMap, nameMap, noSubParse)
-    return out
+    return unflatten(out)
   }
 
   // output string of .proto SDL for this message
