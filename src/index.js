@@ -311,25 +311,28 @@ export class ReaderMessage {
   // utils
 
   // use string-queries to get data, without walking all messages (just those in query)
-  query (q) {
-    let [path, type = 'raw'] = q.split(':')
-    if (path[0] !== '0') {
-      path = `0.${path}`
-    }
-    const p = path.split('.').slice(1)
-    const subPath = this.path + '.' + p.join('.')
-    if (p.length === 1) {
-      return this.sub[p[0]].map(i => i[type])
-    }
-
-    // TODO: this uses more expensive walk
+  query (...queries) {
     const out = []
-    const typeMap = { [path]: type }
-    this.walk(field => {
-      if (field.path === subPath) {
-        out.push(field[type])
+    for (const q of queries) {
+      let [path, type = 'raw'] = q.split(':')
+      if (path[0] !== '0') {
+        path = `0.${path}`
       }
-    }, undefined, typeMap)
+      const p = path.split('.').slice(1)
+      const subPath = this.path + '.' + p.join('.')
+      if (p.length === 1) {
+        out.push(...this.sub[p[0]].map(i => i[type]))
+      } else {
+        // TODO: this uses more expensive walk
+
+        const typeMap = { [path]: type }
+        this.walk(field => {
+          if (field.path === subPath) {
+            out.push(field[type])
+          }
+        }, undefined, typeMap)
+      }
+    }
     return out
   }
 

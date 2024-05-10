@@ -38,6 +38,9 @@ test('Repeated Elements', () => {
   const tree = new RawProto([0x22, 0x05, 0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x28, 0x01, 0x28, 0x02, 0x28, 0x03])
   expect(tree.query('5:int')).toEqual([1, 2, 3])
   expect(tree.query('4:string')).toEqual(['hello'])
+
+  // you can do multiple queries in 1
+  expect(tree.query('5:int', '4:string')).toEqual([1, 2, 3, 'hello'])
 })
 
 test('Packed Repeated Fields', () => {
