@@ -1,5 +1,0 @@
-{
-  "main": "rawproto_cli.cjs",
-  "output": "rawproto.blob",
-  "disableExperimentalSEAWarning": true
-}
