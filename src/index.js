@@ -381,9 +381,19 @@ export class ReaderMessage {
   }
 
   // output JSON-compat object for this message
-  toJS (typeMap = {}, nameMap = {}, noSubParse = []) {
+  toJS (prefix = 'f', typeMap = {}, nameMap = {}, noSubParse = []) {
     const out = {}
     this.walk(field => {
+      if (field.name === field.path) {
+        const n = field.name.split('.')
+        for (const ni in n) {
+          if (!n[ni].startsWith(prefix)) {
+            n[ni] = `${prefix}${n[ni]}`
+          }
+        }
+        field.name = n.join('.')
+      }
+
       out[field.name] ||= []
 
       if (field.type === wireTypes.LEN) {
@@ -403,7 +413,7 @@ export class ReaderMessage {
   }
 
   // output string of .proto SDL for this message
-  toProto (typeMap = {}, nameMap = {}, noSubParse = []) {
+  toProto (prefix = 'f', typeMap = {}, nameMap = {}, noSubParse = []) {
     const out = []
     this.walk(field => {}, typeMap, nameMap)
     return out.join('\n')

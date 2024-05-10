@@ -148,7 +148,9 @@ describe('Mapping', () => {
   })
 
   test('toJS', () => {
-    const r = appTree.toJS(queryMap)
+    const r = appTree.toJS('f', queryMap)
+    console.log(JSON.stringify(r, null, 2))
+
     // this checks queryMap
     expect(r.id).toEqual(['com.blizzard.wtcg.hearthstone'])
     expect(r.title).toEqual(['Hearthstone'])
