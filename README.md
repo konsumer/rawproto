@@ -63,17 +63,16 @@ const mydata = proto.walk((field) => {
 Protobuf encodes several different possible types for every wire-type. In this lib, we guess the type based on some context-clues, but it will never be perfect, without hand-tuning. Here are the possible types we support:
 
 ```
-VARINT - int, bool
-FIXED64 - uint, int, bytes, float
-LEN - string, bytes, packedIntVar, packedInt32, packedInt64, flat
-FIXED32 - int, uint, bytes, float
+VARINT - int, bool, string
+FIXED64 - uint, int, bytes, float, string
+LEN - string, bytes, packedIntVar, packedInt32, packedInt64, string
+FIXED32 - int, uint, bytes, float, string
 ```
 
-You can also use `raw` for any type to get the raw field with bytes + meta.
-
-Groups are treated as repeated `LEN` message-fields, and `LEN` will try to be parsed as sub-tree, but you can override with other types. 
-
-
+- You can use any [protobuf scalar type-name](https://protobuf.dev/programming-guides/proto3/#scalar).
+- You can use `raw` for any type to get the raw field with bytes + meta.
+- Groups are treated as repeated `LEN` message-fields
+- `LEN` will try to be parsed as sub-tree, but you can override with other types in `query` (for example if it tries to make a sub-message with part of a string)
 
 ## migration
 

@@ -6,7 +6,8 @@
   "source": "./src/index.js",
   "exports": {
     "require": "./dist/rawproto.cjs",
-    "default": "./dist/rawproto.modern.js"
+    "default": "./dist/rawproto.modern.js",
+    "rawproto/react": "./src/react.jsx"
   },
   "main": "./dist/rawproto.cjs",
   "module": "./dist/rawproto.module.js",
@@ -52,6 +53,7 @@
   },
   "homepage": "https://rawproto.konsumer.js.org",
   "files": [
-    "dist/*"
+    "dist/*",
+    "src/react.jsx"
   ]
 }

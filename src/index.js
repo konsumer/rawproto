@@ -12,10 +12,10 @@ export const wireTypes = {
 const dec = new TextDecoder()
 
 export const wireMap = {
-  0: ['int', 'bool', 'raw'],
-  1: ['uint', 'int', 'bytes', 'float', 'raw'],
-  2: ['raw', 'bytes', 'string', 'sub', 'packedvarint', 'packedint32', 'packedint64'],
-  5: ['uint', 'int', 'bytes', 'float', 'raw']
+  0: ['uint', 'int', 'int32', 'int64', 'uint32', 'uint64', 'sint32', 'sint64', 'bool', 'raw', 'bytes'],
+  1: ['uint', 'int', 'bytes', 'fixed64', 'sfixed64', 'double'],
+  2: ['raw', 'bytes', 'string', 'sub', 'packedIntVar', 'packedInt32', 'packedInt64'],
+  5: ['uint', 'int', 'bytes', 'fixed32', 'sfixed32', 'float', 'raw']
 }
 
 export class ReaderFixed {
@@ -33,7 +33,7 @@ export class ReaderFixed {
   }
 
   get string () {
-    return this.uint.toString()
+    return this.int + ''
   }
 
   get bytes () {
@@ -59,11 +59,23 @@ export class ReaderFixed64 extends ReaderFixed {
   get float () {
     return this.dataView.getFloat64(0, true)
   }
+
+  get double () {
+    return this.float
+  }
+
+  get fixed64 () {
+    return this.uint
+  }
+
+  get sfixed64 () {
+    return this.int
+  }
 }
 
 export class ReaderFixed32 extends ReaderFixed {
   constructor (buffer, path, renderType) {
-    super(buffer, wireTypes.I64, path, renderType)
+    super(buffer, wireTypes.I32, path, renderType)
   }
 
   // lazy-load representations other than this.buffer (ArrayBuffer)
@@ -77,6 +89,14 @@ export class ReaderFixed32 extends ReaderFixed {
 
   get float () {
     return this.dataView.getFloat32(0, true)
+  }
+
+  get fixed32 () {
+    return this.uint
+  }
+
+  get sfixed32 () {
+    return this.int
   }
 }
 
@@ -95,7 +115,7 @@ export class ReaderVarInt {
   }
 
   get bytes () {
-    this._bytes ||= new Uint8Array(this.buffer).slice(...this.pos)
+    this._bytes ||= new Uint8Array(this.buffer)
     return this._bytes
   }
 
@@ -106,6 +126,30 @@ export class ReaderVarInt {
   get bool () {
     return !!this.uint
   }
+
+  get int32 () {
+    return this.int
+  }
+
+  get int64 () {
+    return this.int
+  }
+
+  get sint32 () {
+    return this.int
+  }
+
+  get sint64 () {
+    return this.int
+  }
+
+  get uint32 () {
+    return this.uint
+  }
+
+  get uint64 () {
+    return this.uint
+  }
 }
 
 export class ReaderMessage {
@@ -114,14 +158,20 @@ export class ReaderMessage {
     this.path = path
     this.renderType = renderType || wireMap[this.type][0]
 
-    if (buffer instanceof ArrayBuffer) {
+    // Buffer is weird because it will say it's an instance of Uint8Array
+    if (typeof Buffer !== 'undefined' && buffer instanceof Buffer) {
+      this.bytes = new Uint8Array(buffer)
+      this.buffer = this.bytes.buffer
+    } else if (buffer instanceof ArrayBuffer) {
       this.buffer = buffer
-    } else if (buffer instanceof Array) {
-      this.buffer = new Uint8Array(buffer).buffer
+      this.bytes = new Uint8Array(this.buffer)
     } else if (buffer instanceof Uint8Array) {
       this.buffer = buffer.buffer
+      this.bytes = new Uint8Array(this.buffer)
+    } else {
+      this.bytes = new Uint8Array(buffer)
+      this.buffer = this.bytes.buffer
     }
-    this.bytes = new Uint8Array(this.buffer)
     this.offset = 0
   }
 
@@ -148,7 +198,7 @@ export class ReaderMessage {
   // render: pull a varint from this
   readVarInt () {
     if (typeof this.offset === 'undefined') {
-      throw new Error('offset must be defined to use readVarInt. If you really want to do this, try setting it to 0.')
+      throw new Error('Offset must be defined to use readVarInt. If you really want to do this, try setting it to 0.')
     }
     let result = 0
     let shift = 0
@@ -170,7 +220,7 @@ export class ReaderMessage {
   get couldHaveSub () {
     const sub = this.sub
     if (Object.keys(sub).length > 0) {
-      return !!this.remainder?.byteLength
+      return true // !!this.remainder?.byteLength
     }
     return false
   }
@@ -215,7 +265,7 @@ export class ReaderMessage {
         if (type === wireTypes.VARINT) {
           const s = this.offset
           const value = parseInt(this.readVarInt())
-          const reader = new ReaderVarInt(this.buffer.slice(s, this.offset), [this.path, index].join('.'), 'int', value)
+          const reader = new ReaderVarInt(this.buffer.slice(s, this.offset - 1), [this.path, index].join('.'), 'int', value)
           this._sub[index].push(reader)
           rollbackOffset = this.offset
         }
@@ -302,7 +352,7 @@ export class ReaderMessage {
     this._packedint64 = []
     this.offset = 0
     while (this.offset < this.buffer.byteLength) {
-      this._packedint32.push(this.dataView.getInt64(this.offset, true))
+      this._packedint64.push(this.dataView.getBigInt64(this.offset, true))
       this.offset += 8
     }
     return this._packedint64
@@ -419,5 +469,7 @@ export class ReaderMessage {
     return out.join('\n')
   }
 }
+
+export const hex = (b, p = '0x') => [...b].map(b => p + b.toString(16)).join(', ')
 
 export default ReaderMessage

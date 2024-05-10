@@ -1,0 +1,22 @@
+{
+  "double": 150,
+  "float": 150,
+  "int32": 150,
+  "int64": 150,
+  "uint32": 150,
+  "uint64": 150,
+  "sint32": 150,
+  "sint64": 150,
+  "fixed32": 150,
+  "fixed64": 150,
+  "sfixed32": 150,
+  "sfixed64": 150,
+  "bool": true,
+  "string": "testing",
+  "bytes": [ 116, 101, 115, 116, 105, 110, 103 ],
+  "sub": { "enum": 2 },
+  "enum": 2,
+  "packedvarint": [0, 1, 2, 3],
+  "packedint32": [0, 1, 2, 3],
+  "packedint64": [0, 1, 2, 3]
+}

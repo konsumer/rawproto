@@ -14,6 +14,7 @@ const appTree = tree.sub['1'][0].sub['2'][0].sub['4'][0]
 // for .map(), this will force types of fields, and give them names in .toJS()
 const queryMap = {
   id: '1.2.4.1:string',
+  idBytes: '1.2.4.2:bytes',
   title: '1.2.4.5:string',
   description: '1.2.4.7:string',
   mediaTypes: '1.2.4.10.1:int',
@@ -165,5 +166,9 @@ describe('Mapping', () => {
     expect(r2.id).toBeUndefined()
     expect(r2.title).toBeUndefined()
     expect(r2.description).toBeUndefined()
+  })
+
+  test.skip('toProto', () => {
+    const r = appTree.toProto('f', queryMap)
   })
 })
