@@ -312,20 +312,25 @@ export class ReaderMessage {
 
   // use string-queries to get data, without walking all messages (just those in query)
   query (q) {
-    const [path, type = 'raw'] = q.split(':')
-    const p = path.split('.')
-    if (p[0] === '0') {
-      p.shift()
+    let [path, type = 'raw'] = q.split(':')
+    if (path[0] !== '0') {
+      path = `0.${path}`
     }
+    const p = path.split('.').slice(1)
+    const subPath = this.path + '.' + p.join('.')
     if (p.length === 1) {
-      return this.sub[path].map(i => i[type])
+      return this.sub[p[0]].map(i => i[type])
     }
-    const subq = `${p.slice(1).join('.')}:${type}`
-    if (this.sub[p[0]]) {
-      return this.sub[p[0]].map(m => m.query(subq)).reduce((a, c) => [...a, ...c], []).filter(m => typeof m !== 'undefined')
-    } else {
-      return []
-    }
+
+    // TODO: this uses more expensive walk
+    const out = []
+    const typeMap = { [path]: type }
+    this.walk(field => {
+      if (field.path === subPath) {
+        out.push(field[type])
+      }
+    }, undefined, typeMap)
+    return out
   }
 
   // apply a callback to every field

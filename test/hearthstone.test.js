@@ -129,9 +129,8 @@ describe('Queries', () => {
     expect(widths.length).toEqual(7)
   })
 
-  test.skip('Description', () => {
-    // TODO: this should not be empty
-    expect(appTree.query('1.2.4.7:string')).toEqual([])
+  test('Description', () => {
+    expect(appTree.query('7:string').length).toEqual(1)
   })
 })
 
@@ -157,7 +156,7 @@ describe('Mapping', () => {
 
     expect(r.mediaWidths.length).toEqual(r.mediaHeights.length)
 
-    // type 2 does not have URL
+    // type 2 media does not have URL
     expect(r.mediaTypes.filter(i => i !== 2).length).toEqual(r.mediaUrls.length)
 
     // this checks to make sure old mapping doesn't taint object
