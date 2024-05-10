@@ -11,6 +11,13 @@ import RawProto from 'rawproto'
 const tree = new RawProto(await readFile(join(dirname(fileURLToPath(import.meta.url)), 'hearthstone.bin')))
 const appTree = tree.sub['1'][0].sub['2'][0].sub['4'][0]
 
+// for .map(), this will force description to be a string
+const queryMap = {
+  id: '1.2.4.1:string',
+  title: '1.2.4.5:string',
+  description: '1.2.4.7:string'
+}
+
 test('Get fields of appTree', () => {
   // this is the counts of every field
   expect(appTree.fields).toEqual({ 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 10: 10, 13: 1, 14: 1, 15: 1, 16: 1, 17: 1, 18: 1, 21: 1, 24: 1, 25: 1, 26: 1, 27: 1, 29: 1, 32: 1, 34: 1, 38: 1, 39: 1, 40: 1, 43: 1, 45: 1, 46: 1, 48: 1, 50: 1, 51: 1 })
@@ -119,7 +126,8 @@ describe('Queries', () => {
   })
 
   test.skip('Description', () => {
-    // TODO
+    // TODO: this should not be empty
+    expect(appTree.query('1.2.4.7:string')).toEqual([])
   })
 })
 
@@ -132,12 +140,21 @@ describe('Mapping', () => {
       expect(field.name).toBeDefined()
       expect(field.path).toBeDefined()
       expect(field.type).toBeDefined()
-    })
-    expect(counter).toEqual(1670)
+    }, queryMap)
+    expect(counter).toEqual(637)
   })
 
-  test.skip('toJS', () => {
-    const r = appTree.toJS()
-    // TODO
+  test('toJS', () => {
+    const r = appTree.toJS(queryMap)
+    // this checks queryMap
+    expect(r.id).toEqual(['com.blizzard.wtcg.hearthstone'])
+    expect(r.title).toEqual(['Hearthstone'])
+    expect(r.description.length).toEqual(1)
+
+    // this checks to make sure old mapping doesn't taint object
+    const r2 = appTree.toJS()
+    expect(r2.id).toBeUndefined()
+    expect(r2.title).toBeUndefined()
+    expect(r2.description).toBeUndefined()
   })
 })

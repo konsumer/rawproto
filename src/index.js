@@ -14,9 +14,9 @@ const dec = new TextDecoder()
 
 export const wireMap = {
   0: ['int', 'bool', 'raw'],
-  1: ['int', 'uint', 'bytes', 'float', 'raw'],
+  1: ['uint', 'int', 'bytes', 'float', 'raw'],
   2: ['raw', 'bytes', 'string', 'sub', 'packedvarint', 'packedint32', 'packedint64'],
-  5: ['int', 'uint', 'bytes', 'float', 'raw']
+  5: ['uint', 'int', 'bytes', 'float', 'raw']
 }
 
 export class ReaderFixed {
@@ -82,11 +82,10 @@ export class ReaderFixed32 extends ReaderFixed {
 }
 
 export class ReaderVarInt {
-  constructor (buffer, value, path, renderType) {
+  constructor (buffer, path, renderType, value) {
     this.type = wireTypes.VARINT
     this.buffer = buffer
-    this.uint = value
-    this.int = value
+    this.value = this.uint = this.int = value
     this.path = path
     this.renderType = renderType || wireMap[this.type][0]
   }
@@ -127,6 +126,7 @@ export class ReaderMessage {
     this.offset = 0
   }
 
+  // render: pull a group (as bytes) from this
   readBufferUntilGroupEnd (index) {
     const offsetStart = this.offset
     let indexType = parseInt(this.readVarInt())
@@ -146,6 +146,7 @@ export class ReaderMessage {
     return this.buffer.slice(offsetStart, this.offset)
   }
 
+  // render: pull a varint from this
   readVarInt () {
     if (typeof this.offset === 'undefined') {
       throw new Error('offset must be defined to use readVarInt. If you really want to do this, try setting it to 0.')
@@ -164,17 +165,23 @@ export class ReaderMessage {
     return result
   }
 
+  // lazy-load fields
+
   // is it possible this is a message?
-  couldHaveSub () {
+  get couldHaveSub () {
     const sub = this.sub
     if (Object.keys(sub).length > 0) {
-      return true
+      return !!this.remainder?.byteLength
     }
     return false
   }
 
-  // lazy-load representations other than this.buffer (ArrayBuffer)
+  // is it likely this is a string?
+  get likelyString () {
+    return typeof this.bytes.find(b => b < 32) === 'undefined'
+  }
 
+  // get list of sub-fields with counts
   get fields () {
     if (this._fields) {
       return this._fields
@@ -185,6 +192,7 @@ export class ReaderMessage {
     return this._fields
   }
 
+  // get sub-fields, triggers render (cached)
   get sub () {
     if (this._sub) {
       return this._sub
@@ -208,7 +216,7 @@ export class ReaderMessage {
         if (type === wireTypes.VARINT) {
           const s = this.offset
           const value = parseInt(this.readVarInt())
-          const reader = new ReaderVarInt(this.buffer.slice(s, this.offset), value, [this.path, index].join('.'))
+          const reader = new ReaderVarInt(this.buffer.slice(s, this.offset), [this.path, index].join('.'), 'int', value)
           this._sub[index].push(reader)
           rollbackOffset = this.offset
         }
@@ -248,14 +256,18 @@ export class ReaderMessage {
     }
   }
 
+  // get raw representation of this (used for queries)
   get raw () {
     return this
   }
 
+  // get string of this
   get string () {
     this._string ||= dec.decode(this.bytes)
     return this._string
   }
+
+  // render: pull packed ints from this
 
   get packedIntVar () {
     if (typeof this._packedintvar !== 'undefined') {
@@ -303,6 +315,9 @@ export class ReaderMessage {
   query (q) {
     const [path, type = 'raw'] = q.split(':')
     const p = path.split('.')
+    if (p[0] === '0') {
+      p.shift()
+    }
     if (p.length === 1) {
       return this.sub[path].map(i => i[type])
     }
@@ -315,27 +330,74 @@ export class ReaderMessage {
   }
 
   // apply a callback to every field
-  walk (cb, typeMap = {}, nameMap = {}) {
+  walk (cb, queryMap, typeMap = {}, nameMap = {}, noSubParse = []) {
+    // this should only happen once at top, and will override typeMap/nameMap with stuff in queryMap
+    if (queryMap) {
+      for (const k of Object.keys(queryMap)) {
+        let [path, type] = queryMap[k].split(':')
+        if (path[0] !== '0') {
+          path = `0.${path}`
+        }
+        nameMap[path] = k
+        if (type) {
+          typeMap[path] = type
+        }
+      }
+
+      // force string/bytyes types to not be sub-parsed
+      for (const k of Object.keys(typeMap)) {
+        if (['string', 'bytes'].includes(typeMap[k]) && !noSubParse.includes(k)) {
+          noSubParse.push(k)
+        }
+      }
+    }
+
     for (const flist of Object.values(this.sub)) {
-      for (const field of flist) {
+      for (const fieldReal of flist) {
+        // copy it, so it's not modified in-place
+        const field = new fieldReal.constructor(fieldReal.buffer, fieldReal.path, fieldReal.renderType, fieldReal.value)
+        field._sub = fieldReal._sub
+
         field.name = nameMap[field.path] || field.path
-        cb(field)
-        if (field.type === wireTypes.LEN) {
-          field.walk(cb, typeMap, nameMap)
+        field.renderType = typeMap[field.path] || field.renderType
+        if (!typeMap[field.path] && field.likelyString) {
+          field.renderType = 'string'
+        }
+        if (field.type === wireTypes.LEN && field.renderType === 'raw' && !noSubParse.includes(field.path)) {
+          field.walk(cb, undefined, typeMap, nameMap, noSubParse)
+        } else {
+          cb(field)
         }
       }
     }
   }
 
   // output JSON-compat object for this message
-  toJS (typeMap = {}, nameMap = {}) {
+  toJS (typeMap = {}, nameMap = {}, noSubParse = []) {
     const out = {}
+    this.walk(field => {
+      out[field.name] ||= []
+
+      if (field.type === wireTypes.LEN) {
+        if (field.renderType === 'string') {
+          out[field.name].push(field.string)
+        }
+        if (field.renderType === 'bytes') {
+          out[field.name].push(field.bytes)
+        }
+      } else {
+        try {
+          out[field.name].push(field[field.renderType])
+        } catch (e) {}
+      }
+    }, typeMap, nameMap, noSubParse)
     return out
   }
 
   // output string of .proto SDL for this message
-  toProto (typeMap = {}, nameMap = {}) {
+  toProto (typeMap = {}, nameMap = {}, noSubParse = []) {
     const out = []
+    this.walk(field => {}, typeMap, nameMap)
     return out.join('\n')
   }
 }
