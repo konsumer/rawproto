@@ -42,13 +42,13 @@ function testTypes (t) {
   expect(t.sub[1][0].double).toEqual(150)
 
   expect(t.sub[10][0].type).toEqual(wireTypes.I64)
-  expect(t.sub[10][0].uint).toEqual(150n)
-  expect(t.sub[10][0].int).toEqual(150n)
-  expect(t.sub[10][0].fixed64).toEqual(150n)
+  expect(t.sub[10][0].uint).toEqual(150)
+  expect(t.sub[10][0].int).toEqual(150)
+  expect(t.sub[10][0].fixed64).toEqual(150)
   expect(t.sub[10][0].raw.type).toEqual(wireTypes.I64)
   expect(t.sub[10][0].string).toEqual('150')
   expect(t.sub[12][0].type).toEqual(wireTypes.I64)
-  expect(t.sub[12][0].sfixed64).toEqual(150n)
+  expect(t.sub[12][0].sfixed64).toEqual(150)
 
   // LEN
   expect(t.sub[14][0].type).toEqual(wireTypes.LEN)
@@ -62,13 +62,13 @@ function testTypes (t) {
   expect(t.sub[19][0].type).toEqual(wireTypes.LEN)
   expect(t.sub[19][0].packedInt32).toEqual([0, 1, 2, 3])
   expect(t.sub[20][0].type).toEqual(wireTypes.LEN)
-  expect(t.sub[20][0].packedInt64).toEqual([0n, 1n, 2n, 3n])
+  expect(t.sub[20][0].packedInt64).toEqual([0, 1, 2, 3])
   expect(t.sub[20][0].couldHaveSub).toEqual(false)
 
   // trigger caches
   expect(t.sub[18][0].packedIntVar).toEqual([0, 1, 2, 3])
   expect(t.sub[19][0].packedInt32).toEqual([0, 1, 2, 3])
-  expect(t.sub[20][0].packedInt64).toEqual([0n, 1n, 2n, 3n])
+  expect(t.sub[20][0].packedInt64).toEqual([0, 1, 2, 3])
 
   // this is an intentional misread of a sub-message (it's a string, but you can treat it like a message)
   expect(t.sub[14][0].sub['12'][0].path).toEqual('0.14.12')

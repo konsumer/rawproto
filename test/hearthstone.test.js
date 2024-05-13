@@ -134,3 +134,15 @@ describe('Queries', () => {
     expect(appTree.query('7:string').length).toEqual(1)
   })
 })
+
+describe('Generate', () => {
+  test('Get JSON from binary proto', () => {
+    const j = appTree.toJS({
+      id: '1.2.4.1:string',
+      title: '1.2.4.5:string',
+      company: '1.2.4.6:string',
+      description: '1.2.4.7:string'
+    })
+    console.log(j)
+  })
+})

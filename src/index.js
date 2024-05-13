@@ -49,15 +49,30 @@ export class ReaderFixed64 extends ReaderFixed {
 
   // lazy-load representations other than this.buffer (ArrayBuffer)
   get uint () {
-    return this.dataView.getBigUint64(0, true)
+    const v = this.dataView.getBigUint64(0, true)
+    try {
+      return parseInt(v)
+    } catch (e) {
+      return v
+    }
   }
 
   get int () {
-    return this.dataView.getBigInt64(0, true)
+    const v = this.dataView.getBigInt64(0, true)
+    try {
+      return parseInt(v)
+    } catch (e) {
+      return v
+    }
   }
 
   get float () {
-    return this.dataView.getFloat64(0, true)
+    const v = this.dataView.getFloat64(0, true)
+    try {
+      return parseFloat(v)
+    } catch (e) {
+      return v
+    }
   }
 
   get double () {
@@ -352,7 +367,11 @@ export class ReaderMessage {
     this._packedint64 = []
     this.offset = 0
     while (this.offset < this.buffer.byteLength) {
-      this._packedint64.push(this.dataView.getBigInt64(this.offset, true))
+      try {
+        this._packedint64.push(parseInt(this.dataView.getBigInt64(this.offset, true)))
+      } catch (e) {
+        this._packedint64.push(this.dataView.getBigInt64(this.offset, true))
+      }
       this.offset += 8
     }
     return this._packedint64
@@ -365,12 +384,12 @@ export class ReaderMessage {
     return query(this, this.path, ...queries)
   }
 
-  toJS (prefix = 'f', queryMap = {}) {
-    return toJS(this, prefix)
+  toJS (queryMap = {}, prefix = 'f') {
+    return toJS(this, queryMap, prefix)
   }
 
-  toProto (prefix = 'f', queryMap = {}) {
-    return toProto(this, prefix)
+  toProto (queryMap = {}, prefix = 'f') {
+    return toProto(this, queryMap, prefix, queryMap)
   }
 }
 
@@ -397,13 +416,51 @@ export function query (tree, prefix = '0', ...queries) {
   return out
 }
 
-export function toJS (tree, prefix = 'f', queryMap = {}) {
-  const out = {}
+export function toJS (tree, queryMap, prefix = 'f', nameMap, typeMap) {
+  let out = {}
 
-  return out
+  // this is used as a marker that it's top-level
+  if (typeof queryMap === 'object') {
+    if (!nameMap) {
+      nameMap = {}
+    }
+    if (!typeMap) {
+      typeMap = {}
+    }
+    for (const name of Object.keys(queryMap)) {
+      let [path, type = 'raw'] = queryMap[name].split(':')
+      if (path[0] !== '0') {
+        path = `0.${path}`
+      }
+      nameMap[path] = name
+      typeMap[path] = type
+    }
+  }
+
+  for (const subs of Object.values(tree.sub || {})) {
+    for (const t of subs) {
+      try {
+        const name = nameMap[t.path] || t.path
+        const renderType = typeMap[t.path] || t.renderType
+        if (t.type === wireTypes.LEN && !['string', 'bytes'].includes(renderType)) {
+          if (t.couldHaveSub) {
+            out = { ...out, ...toJS(t, undefined, prefix, nameMap, typeMap) }
+          } else if (t.likelyString) {
+            out[name] = t.string
+          } else {
+            out[name] = t.bytes
+          }
+        } else {
+          out[name] = t[renderType]
+        }
+      } catch (e) {}
+    }
+  }
+
+  return unflatten(out)
 }
 
-export function toProto (tree, prefix = 'f', queryMap = {}) {
+export function toProto (tree, queryMap, prefix = 'f') {
   const out = {}
 
   return out
