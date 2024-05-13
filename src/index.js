@@ -51,7 +51,7 @@ export class ReaderFixed64 extends ReaderFixed {
   get uint () {
     const v = this.dataView.getBigUint64(0, true)
     try {
-      return parseInt(v)
+      return Number(v)
     } catch (e) {
       return v
     }
@@ -60,7 +60,7 @@ export class ReaderFixed64 extends ReaderFixed {
   get int () {
     const v = this.dataView.getBigInt64(0, true)
     try {
-      return parseInt(v)
+      return Number(v)
     } catch (e) {
       return v
     }
@@ -69,7 +69,7 @@ export class ReaderFixed64 extends ReaderFixed {
   get float () {
     const v = this.dataView.getFloat64(0, true)
     try {
-      return parseFloat(v)
+      return Number(v)
     } catch (e) {
       return v
     }
@@ -464,9 +464,9 @@ export function toJS (tree, queryMap, prefix = 'f', nameMap, typeMap) {
 const prefixify = (prefix, path) => path.split('.').map((v, k, a) => `${prefix}${v}`).join('.')
 
 export function toProto (tree, queryMap, prefix = 'f') {
-  const out = {}
+  const out = []
 
-  return out
+  return out.join('\n')
 }
 
 export default ReaderMessage
