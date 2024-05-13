@@ -1,4 +1,4 @@
-// same tests as RawProto, but using more elegant query calls
+// Basic tests of simple messages, using query
 
 /* global test expect */
 

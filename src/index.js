@@ -218,16 +218,16 @@ export class ReaderMessage {
 
   // is it possible this is a message?
   get couldHaveSub () {
-    const sub = this.sub
-    if (Object.keys(sub).length > 0) {
-      return true // !!this.remainder?.byteLength
+    if (typeof this._couldHaveSub === 'undefined') {
+      this._couldHaveSub = Object.keys(this.sub).length > 0
     }
-    return false
+    return this._couldHaveSub
   }
 
   // is it likely this is a string?
   get likelyString () {
-    return typeof this.bytes.find(b => b < 32) === 'undefined'
+    this._likelyString ||= typeof (this.bytes.find(b => b < 32)) === 'undefined'
+    return this._likelyString
   }
 
   // get list of sub-fields with counts
@@ -362,112 +362,51 @@ export class ReaderMessage {
 
   // use string-queries to get data, without walking all messages (just those in query)
   query (...queries) {
-    const out = []
-    for (const q of queries) {
-      let [path, type = 'raw'] = q.split(':')
-      if (path[0] !== '0') {
-        path = `0.${path}`
-      }
-      const p = path.split('.').slice(1)
-      const subPath = this.path + '.' + p.join('.')
-      if (p.length === 1) {
-        out.push(...this.sub[p[0]].map(i => i[type]))
-      } else {
-        // TODO: this uses more expensive walk
+    return query(this, this.path, ...queries)
+  }
 
-        const typeMap = { [path]: type }
-        this.walk(field => {
-          if (field.path === subPath) {
-            out.push(field[type])
-          }
-        }, undefined, typeMap)
-      }
+  toJS (prefix = 'f', queryMap = {}) {
+    return toJS(this, prefix)
+  }
+
+  toProto (prefix = 'f', queryMap = {}) {
+    return toProto(this, prefix)
+  }
+}
+
+export function query (tree, prefix = '0', ...queries) {
+  const out = []
+  for (const q of queries) {
+    let [path, type = 'raw'] = q.split(':')
+    if (path.substr(0, prefix.length) !== prefix) {
+      path = `${prefix}.${path}`
     }
-    return out
-  }
-
-  // apply a callback to every field
-  walk (cb, queryMap, typeMap = {}, nameMap = {}, noSubParse = []) {
-    // this should only happen once at top, and will override typeMap/nameMap with stuff in queryMap
-    if (queryMap) {
-      for (const k of Object.keys(queryMap)) {
-        let [path, type] = queryMap[k].split(':')
-        if (path[0] !== '0') {
-          path = `0.${path}`
-        }
-        nameMap[path] = k
-        if (type) {
-          typeMap[path] = type
+    const pathTraverse = path.replace(new RegExp(`^${prefix}\.`), '').split('.')
+    let current = [tree]
+    for (const i of pathTraverse) {
+      const ca = []
+      for (const c of current) {
+        if (c.sub[i]) {
+          ca.push(...c.sub[i])
         }
       }
-
-      // force string/bytyes types to not be sub-parsed
-      for (const k of Object.keys(typeMap)) {
-        if (['string', 'bytes'].includes(typeMap[k]) && !noSubParse.includes(k)) {
-          noSubParse.push(k)
-        }
-      }
+      current = ca
     }
-
-    for (const flist of Object.values(this.sub)) {
-      for (const fieldReal of flist) {
-        // copy it, so it's not modified in-place
-        const field = new fieldReal.constructor(fieldReal.buffer, fieldReal.path, fieldReal.renderType, fieldReal.value)
-        field._sub = fieldReal._sub
-        field._fields = fieldReal._fields
-
-        field.name = nameMap[field.path] || field.path
-        field.renderType = typeMap[field.path] || field.renderType
-        if (!typeMap[field.path] && field.likelyString) {
-          field.renderType = 'string'
-        }
-        if (field.type === wireTypes.LEN && field.renderType === 'raw' && !noSubParse.includes(field.path)) {
-          field.walk(cb, undefined, typeMap, nameMap, noSubParse)
-        } else {
-          cb(field)
-        }
-      }
-    }
+    out.push(...current.filter(c => c.path === path).map(c => c[type]))
   }
+  return out
+}
 
-  // output JSON-compat object for this message
-  toJS (prefix = 'f', typeMap = {}, nameMap = {}, noSubParse = []) {
-    const out = {}
-    this.walk(field => {
-      if (field.name === field.path) {
-        const n = field.name.split('.')
-        for (const ni in n) {
-          if (!n[ni].startsWith(prefix)) {
-            n[ni] = `${prefix}${n[ni]}`
-          }
-        }
-        field.name = n.join('.')
-      }
+export function toJS (tree, prefix = 'f', queryMap = {}) {
+  const out = {}
 
-      out[field.name] ||= []
+  return out
+}
 
-      if (field.type === wireTypes.LEN) {
-        if (field.renderType === 'string') {
-          out[field.name].push(field.string)
-        }
-        if (field.renderType === 'bytes') {
-          out[field.name].push(field.bytes)
-        }
-      } else {
-        try {
-          out[field.name].push(field[field.renderType])
-        } catch (e) {}
-      }
-    }, typeMap, nameMap, noSubParse)
-    return unflatten(out)
-  }
+export function toProto (tree, prefix = 'f', queryMap = {}) {
+  const out = {}
 
-  // output string of .proto SDL for this message
-  toProto (prefix = 'f', typeMap = {}, nameMap = {}, noSubParse = []) {
-    const out = []
-    this.walk(field => {}, typeMap, nameMap)
-    return out.join('\n')
-  }
+  return out
 }
 
 export const hex = (b, p = '0x') => [...b].map(b => p + b.toString(16)).join(', ')
