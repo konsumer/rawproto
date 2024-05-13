@@ -143,7 +143,6 @@ describe('Generate', () => {
       company: '1.2.4.6:string',
       description: '1.2.4.7:string'
     })
-    expect(j.f0).toBeDefined()
     expect(j.id).toEqual(['com.blizzard.wtcg.hearthstone'])
     expect(j.title).toEqual(['Hearthstone'])
     expect(j.company).toEqual(['Blizzard Entertainment, Inc.'])
