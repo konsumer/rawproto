@@ -440,18 +440,19 @@ export function toJS (tree, queryMap, prefix = 'f', nameMap, typeMap) {
   for (const subs of Object.values(tree.sub || {})) {
     for (const t of subs) {
       try {
-        const name = nameMap[t.path] || t.path
+        const name = nameMap[t.path] || prefixify(prefix, t.path)
+        out[name] ||= []
         const renderType = typeMap[t.path] || t.renderType
         if (t.type === wireTypes.LEN && !['string', 'bytes'].includes(renderType)) {
           if (t.couldHaveSub) {
             out = { ...out, ...toJS(t, undefined, prefix, nameMap, typeMap) }
           } else if (t.likelyString) {
-            out[name] = t.string
+            out[name].push(t.string)
           } else {
-            out[name] = t.bytes
+            out[name].push(t.bytes)
           }
         } else {
-          out[name] = t[renderType]
+          out[name].push(t[renderType])
         }
       } catch (e) {}
     }
@@ -460,12 +461,12 @@ export function toJS (tree, queryMap, prefix = 'f', nameMap, typeMap) {
   return unflatten(out)
 }
 
+const prefixify = (prefix, path) => path.split('.').map((v, k, a) => `${prefix}${v}`).join('.')
+
 export function toProto (tree, queryMap, prefix = 'f') {
   const out = {}
 
   return out
 }
-
-export const hex = (b, p = '0x') => [...b].map(b => p + b.toString(16)).join(', ')
 
 export default ReaderMessage

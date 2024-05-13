@@ -143,13 +143,13 @@ describe('Generate', () => {
       company: '1.2.4.6:string',
       description: '1.2.4.7:string'
     })
-    expect(j[0]).toBeDefined()
-    expect(j.id).toEqual('com.blizzard.wtcg.hearthstone')
-    expect(j.title).toEqual('Hearthstone')
-    expect(j.company).toEqual('Blizzard Entertainment, Inc.')
+    expect(j.f0).toBeDefined()
+    expect(j.id).toEqual(['com.blizzard.wtcg.hearthstone'])
+    expect(j.title).toEqual(['Hearthstone'])
+    expect(j.company).toEqual(['Blizzard Entertainment, Inc.'])
     expect(j.description).toBeDefined()
 
-    // leftovers from fieldMap get put into a kind of array-like structure
-    expect(j[0][1][2][4][2]).toEqual('com.blizzard.wtcg.hearthstone')
+    // leftovers from fieldMap get put into a kind of array-like structure, using prefix (default is "f")
+    expect(j.f0.f1.f2.f4.f2).toEqual(['com.blizzard.wtcg.hearthstone'])
   })
 })
