@@ -462,11 +462,56 @@ export function toJS (tree, queryMap, prefix = 'f', nameMap, typeMap) {
 }
 
 const prefixify = (prefix, path) => path.split('.').map((v, k, a) => `${prefix}${v}`).join('.')
+const indentString = (str, count, indent = ' ') => str.replace(/^/gm, indent.repeat(count));
 
-export function toProto (tree, queryMap, prefix = 'f') {
+export function toProto (tree, queryMap, prefix = 'f', nameMap, typeMap, messageName='MessageRoot', indent=0) {
   const out = []
 
-  return out.join('\n')
+  // this is used as a marker that it's top-level
+  if (typeof queryMap === 'object') {
+    if (!nameMap) {
+      nameMap = {}
+    }
+    if (!typeMap) {
+      typeMap = {}
+    }
+    for (const name of Object.keys(queryMap)) {
+      let [path, type = 'raw'] = queryMap[name].split(':')
+      if (path[0] !== '0') {
+        path = `0.${path}`
+      }
+      nameMap[path] = name
+      typeMap[path] = type
+    }
+  }
+
+  out.push(`message ${messageName} {`)
+
+  for (const n of Object.keys(tree.sub)) {
+    const f = tree?.sub[n]
+    if (!f[0]?.path) {
+      // not really sure why this happens
+      continue
+    }
+    const repeated = f.length > 1
+    const renderType = typeMap[f[0]?.path] || f[0].renderType
+    const name = nameMap[f[0].path] || `${prefix}${n}`
+
+    if (f[0].type === wireTypes.LEN && !['string', 'bytes'].includes(renderType)) {
+      if (Object.keys(f[0].sub).length) {
+        out.push(indentString(`Message${n} ${name} = ${n};`, 2))
+        out.push(...toProto(f[0], undefined, prefix, nameMap, typeMap, messageName=`Message${n}`, indent + 1))
+      } else {
+        out.push(indentString(`bytes ${name} = ${n};`, 2))
+      }
+    } else {
+      out.push(indentString(`${repeated ? 'repeated ' : ''}${renderType} ${name} = ${n};`, 2))
+    }
+  }
+
+  out.push('}')
+
+  return indentString(out.join('\n'), 2*indent)
 }
 
 export default ReaderMessage

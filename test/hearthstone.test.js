@@ -151,4 +151,9 @@ describe('Generate', () => {
     // leftovers from fieldMap get put into a kind of array-like structure, using prefix (default is "f")
     expect(j.f0.f1.f2.f4.f2).toEqual(['com.blizzard.wtcg.hearthstone'])
   })
+
+  test('Get proto SDL from binary proto', () => {
+    const p = appTree.toProto()
+    console.log(p)
+  })
 })
