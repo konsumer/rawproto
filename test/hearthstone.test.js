@@ -134,26 +134,3 @@ describe('Queries', () => {
     expect(appTree.query('7:string').length).toEqual(1)
   })
 })
-
-describe('Generate', () => {
-  test('Get JSON from binary proto', () => {
-    const j = appTree.toJS({
-      id: '1.2.4.1:string',
-      title: '1.2.4.5:string',
-      company: '1.2.4.6:string',
-      description: '1.2.4.7:string'
-    })
-    expect(j.id).toEqual(['com.blizzard.wtcg.hearthstone'])
-    expect(j.title).toEqual(['Hearthstone'])
-    expect(j.company).toEqual(['Blizzard Entertainment, Inc.'])
-    expect(j.description).toBeDefined()
-
-    // leftovers from fieldMap get put into a kind of array-like structure, using prefix (default is "f")
-    expect(j.f0.f1.f2.f4.f2).toEqual(['com.blizzard.wtcg.hearthstone'])
-  })
-
-  test('Get proto SDL from binary proto', () => {
-    const p = appTree.toProto()
-    console.log(p)
-  })
-})

@@ -487,25 +487,48 @@ export function toProto (tree, queryMap, prefix = 'f', nameMap, typeMap, message
 
   out.push(`message ${messageName} {`)
 
-  for (const n of Object.keys(tree.sub)) {
+  for (const n of Object.keys(tree.sub || {})) {
     const f = tree?.sub[n]
     if (!f[0]?.path) {
       // not really sure why this happens
       continue
     }
-    const repeated = f.length > 1
-    const renderType = typeMap[f[0]?.path] || f[0].renderType
-    const name = nameMap[f[0].path] || `${prefix}${n}`
+    let repeated = ''
+    let options = ''
+    let renderType = typeMap[f[0]?.path] || f[0].renderType
+    const name = nameMap[f[0].path] ? nameMap[f[0].path].split('.').pop() : `${prefix}${n}`
 
-    if (f[0].type === wireTypes.LEN && !['string', 'bytes'].includes(renderType)) {
-      if (Object.keys(f[0].sub).length) {
+    if (f.length > 1) {
+      repeated = 'repeated '
+    }
+
+    if (renderType === 'packedIntVar') {
+      renderType = 'int32'
+      repeated = 'repeated '
+      options = ' [packed=true]'
+    }
+
+    if (renderType === 'packedInt32') {
+      renderType = 'fixed32'
+      repeated = 'repeated '
+      options = ' [packed=true]'
+    }
+
+    if (renderType === 'packedInt64') {
+      renderType = 'fixed64'
+      repeated = 'repeated '
+      options = ' [packed=true]'
+    }
+
+    if (typeof f[0] === 'object' && f[0].type === wireTypes.LEN && !['string', 'bytes'].includes(renderType)) {
+      if (f[0].couldHaveSub) {
         out.push(indentString(`Message${n} ${name} = ${n};`, 2))
-        // out.push(...toProto(f[0], undefined, prefix, nameMap, typeMap, messageName=`Message${n}`, indent + 1))
+        out.push(toProto(f[0], undefined, prefix, nameMap, typeMap, messageName = `Message${n}`, indent + 1))
       } else {
         out.push(indentString(`bytes ${name} = ${n};`, 2))
       }
     } else {
-      out.push(indentString(`${repeated ? 'repeated ' : ''}${renderType} ${name} = ${n};`, 2))
+      out.push(indentString(`${repeated}${renderType} ${name} = ${n}${options};`, 2))
     }
   }
 
