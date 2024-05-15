@@ -462,9 +462,9 @@ export function toJS (tree, queryMap, prefix = 'f', nameMap, typeMap) {
 }
 
 const prefixify = (prefix, path) => path.split('.').map((v, k, a) => `${prefix}${v}`).join('.')
-const indentString = (str, count, indent = ' ') => str.replace(/^/gm, indent.repeat(count));
+const indentString = (str, count, indent = ' ') => str.replace(/^/gm, indent.repeat(count))
 
-export function toProto (tree, queryMap, prefix = 'f', nameMap, typeMap, messageName='MessageRoot', indent=0) {
+export function toProto (tree, queryMap, prefix = 'f', nameMap, typeMap, messageName = 'MessageRoot', indent = 0) {
   const out = []
 
   // this is used as a marker that it's top-level
@@ -500,7 +500,7 @@ export function toProto (tree, queryMap, prefix = 'f', nameMap, typeMap, message
     if (f[0].type === wireTypes.LEN && !['string', 'bytes'].includes(renderType)) {
       if (Object.keys(f[0].sub).length) {
         out.push(indentString(`Message${n} ${name} = ${n};`, 2))
-        out.push(...toProto(f[0], undefined, prefix, nameMap, typeMap, messageName=`Message${n}`, indent + 1))
+        // out.push(...toProto(f[0], undefined, prefix, nameMap, typeMap, messageName=`Message${n}`, indent + 1))
       } else {
         out.push(indentString(`bytes ${name} = ${n};`, 2))
       }
@@ -511,7 +511,7 @@ export function toProto (tree, queryMap, prefix = 'f', nameMap, typeMap, message
 
   out.push('}')
 
-  return indentString(out.join('\n'), 2*indent)
+  return indentString(out.join('\n'), 2 * indent)
 }
 
 export default ReaderMessage
