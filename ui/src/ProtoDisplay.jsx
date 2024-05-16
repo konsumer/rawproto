@@ -81,15 +81,15 @@ export function ProtoField ({ field, index }) {
       <div>
         <span className={`badge badge-${badgeColors[field.type]}`}>{index}</span>
         <span className='text-gray-500 italic'>{parseLabels[field.renderType]}</span>
-        {index}:{field.renderType} - {field[field.renderType]}
+        <span>{field[field.renderType]}</span>
       </div>
     )
   } catch (e) {
+    // sometimes parsing as renderType fails
     return (
       <div>
         <span className={`badge badge-${badgeColors[field.type]}`}>{index}</span>
         <span className='text-gray-500 italic'>{parseLabels[field.renderType]}</span>
-        {index}:{field.renderType}
       </div>
     )
   }
