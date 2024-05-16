@@ -9,6 +9,15 @@ import RawProto from 'rawproto'
 const tree = new RawProto(await readFile(join(dirname(fileURLToPath(import.meta.url)), 'hearthstone.bin')))
 const appTree = tree.sub['1'][0].sub['2'][0].sub['4'][0]
 
+// You can build your protobuf bytes with this
+// import { promisify } from 'util'
+// import protobuf from 'protobufjs'
+// import data from './test.json'
+// const proto = promisify(protobuf.load)
+// const { Message } = await proto('test/test.proto')
+// const bytes = Message.encode(data).finish()
+// console.log(bytes.toString('base64'))
+
 const bytes = Buffer.from('CQAAAAAAwGJAFQAAFkMYlgEglgEolgEwlgE4rAJArAJNlgAAAFGWAAAAAAAAAF2WAAAAYZYAAAAAAAAAaAFyB3Rlc3Rpbmd6B3Rlc3RpbmeCAQOIAQKIAQKSAQQAAQIDmgEQAAAAAAEAAAACAAAAAwAAAKIBIAAAAAAAAAAAAQAAAAAAAAACAAAAAAAAAAMAAAAAAAAA', 'base64')
 
 const simplemap = {
