@@ -12,7 +12,7 @@
   "module": "./dist/rawproto.module.js",
   "unpkg": "./dist/rawproto.umd.js",
   "bin": {
-    "rawproto": "rawproto_cli.cjs"
+    "rawproto": "rawproto_cli.js"
   },
   "dependencies": {
     "flat": "^6.0.1",

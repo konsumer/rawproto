@@ -24,7 +24,8 @@ If you just want the CLI, and don't use node, you can also find standalone build
 
 ### CLI
 
-I am still working on this, but will offer a CLI for all the different things you can do with this lib.
+Install it in your path with `npm i -g rawproto` or use it 1-off with `npx rawproto`. Get help with `rawproto --help`
+
 
 ### code
 
