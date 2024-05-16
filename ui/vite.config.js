@@ -8,7 +8,6 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      'rawproto/react': path.resolve(__dirname, '../src/react.jsx'),
       rawproto: path.resolve(__dirname, '../src/index.js')
     }
   }

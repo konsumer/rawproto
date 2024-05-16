@@ -6,8 +6,7 @@
   "source": "./src/index.js",
   "exports": {
     "require": "./dist/rawproto.cjs",
-    "default": "./dist/rawproto.modern.js",
-    "rawproto/react": "./src/react.jsx"
+    "default": "./dist/rawproto.modern.js"
   },
   "main": "./dist/rawproto.cjs",
   "module": "./dist/rawproto.module.js",

@@ -22,6 +22,8 @@ badgeColors[wireTypes.I64] = 'accent'
 badgeColors[wireTypes.I32] = 'secondary'
 badgeColors[wireTypes.SGROUP] = 'primary'
 
+const hex = (b) => [...b].map((c) => c.toString(16).padStart(2, '0')).join(' ')
+
 export default function ProtoDisplay ({ open = false, tree, typeMap = {}, nameMap = {}, index = 0, className }) {
   const [o, setO] = useState(open)
   if (tree) {
@@ -43,10 +45,22 @@ export default function ProtoDisplay ({ open = false, tree, typeMap = {}, nameMa
                 return (<li key={fi}><ProtoDisplay index={n} tree={field} typeMap={typeMap} nameMap={nameMap} /></li>)
               } else {
                 field.renderType = 'bytes'
-                return (<li key={fi}><ProtoField index={n} field={field} /></li>)
+                return (
+                  <li key={fi}>
+                    <div className={`badge badge-${badgeColors[field.type]} gap-2`}>{n}</div>
+                    <p className='text-gray-500 italic'>{parseLabels[field.renderType]}</p>
+                    <ProtoField index={n} field={field} />
+                  </li>
+                )
               }
             } else {
-              return (<li key={fi}><ProtoField index={n} field={field} /></li>)
+              return (
+                <li key={fi}>
+                  <div className={`badge badge-${badgeColors[field.type]} gap-2`}>{n}</div>
+                  <p className='text-gray-500 italic'>{parseLabels[field.renderType]}</p>
+                  <ProtoField index={n} field={field} />
+                </li>
+              )
             }
           }))}
         </ul>
@@ -56,6 +70,10 @@ export default function ProtoDisplay ({ open = false, tree, typeMap = {}, nameMa
 }
 
 export function ProtoField ({ field, index }) {
+  if (field.renderType === 'bytes') {
+    return <div className='bg-base-500'>{hex(field.bytes)}</div>
+  }
+
   try {
     return (
       <div>
