@@ -1,119 +1,124 @@
 // tests that show how to actually parse some real protobuf, in a practical sense
 
-/* global test expect */
+/* global describe test expect */
 
 import { fileURLToPath } from 'url'
 import { join, dirname } from 'path'
 import { readFile } from 'fs/promises'
-import RawProto, { query } from 'rawproto'
+import RawProto from 'rawproto'
 
 // build an initial array of the data I want to look at
-// do this, and you can use getPath() to get values
-const pb = await readFile(join(dirname(fileURLToPath(import.meta.url)), 'hearthstone.bin'))
-const tree = new RawProto(pb).readMessage()
+const tree = new RawProto(await readFile(join(dirname(fileURLToPath(import.meta.url)), 'hearthstone.bin')))
+const appTree = tree.sub['1'][0].sub['2'][0].sub['4'][0]
 
-// since all is off of 1.2.4, this will optimize to pull from there
-const appTree = query(tree, '1.2.4:sub').pop()
-
-test('Get bytes of a sub-message with query', () => {
-  const matches = query(tree, '1.2.4:bytes')
-  expect(matches.length).toEqual(1)
-  expect(matches[0].length).toEqual(15241)
+test('Get fields of appTree', () => {
+  // this is the counts of every field
+  expect(appTree.fields).toEqual({ 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 10: 10, 13: 1, 14: 1, 15: 1, 16: 1, 17: 1, 18: 1, 21: 1, 24: 1, 25: 1, 26: 1, 27: 1, 29: 1, 32: 1, 34: 1, 38: 1, 39: 1, 40: 1, 43: 1, 45: 1, 46: 1, 48: 1, 50: 1, 51: 1 })
 })
 
-test('Get id with query', () => {
-  expect(query(appTree, '1:string').pop()).toEqual('com.blizzard.wtcg.hearthstone')
-})
-
-test('Get title with query', () => {
-  expect(query(appTree, '5:string').pop()).toEqual('Hearthstone')
-})
-
-test('field with groups (manual sub-parse)', () => {
-  // this gets more but is till not right
-  const medias = query(appTree, '10:bytes').map((i) => {
-    const t = new RawProto(i).readMessage()
-    return {
-      type: query(t, '1:uint').pop(),
-      url: query(t, '5:string').pop()
-    }
+describe('Plain traversal', () => {
+  test('Get id', () => {
+    expect(appTree.sub['1'][0].string).toEqual('com.blizzard.wtcg.hearthstone')
   })
-  expect(medias.length).toEqual(10)
 
-  // sort media by types
-  const icon = medias.find((m) => m.type === 4).url
-  const screenshots = medias.filter((m) => m.type === 1).map((m) => m.url)
-  const videos = medias.filter((m) => m.type === 3).map((m) => m.url)
-  const videoThumbs = medias.filter((m) => m.type === 13).map((m) => m.url)
+  test('Get title', () => {
+    expect(appTree.sub['5'][0].string).toEqual('Hearthstone')
+  })
 
-  expect(icon).toEqual('https://play-lh.googleusercontent.com/qTt7JkhZ-U0kevENyTChyUijNUEctA3T5fh7cm8yzKUG0UAnMUgOMpG_9Ln7D24NbQ')
-  expect(screenshots.length).toEqual(6)
-  expect(screenshots[0]).toEqual('https://play-lh.googleusercontent.com/m-S0SqOv428DZcm46NJlyv0pffYpfsNjWz6iyf9LVM1TCWbzWs3clWaugjfzXXnCTbY')
-  expect(videos).toEqual(['https://youtu.be/XT7YEb9_Muw'])
-  expect(videoThumbs).toEqual(['https://i.ytimg.com/vi/XT7YEb9_Muw/hqdefault.jpg'])
-})
+  test('Get media', () => {
+    // these are the same thing
+    expect(appTree.sub['10'].length).toEqual(10)
+    expect(appTree.fields[10]).toEqual(10)
 
-test('field with groups (using plain query)', () => {
-  const types = query(appTree, '10.1:uint')
-  const urls = query(appTree, '10.5:string')
-  expect(types.length).toEqual(urls.length)
+    let icon
+    const screenshots = []
+    const videos = []
+    const videoThumbs = []
 
-  // sort media by types
-  const { icon, screenshots, videos, videoThumbs } = types.reduce(
-    (a, t, i) => {
-      // google's type-enum
-      switch (t) {
-        case 4:
-          a.icon = urls[i]
-          break
-        case 1:
-          a.screenshots.push(urls[i])
-          break
-        case 3:
-          a.videos.push(urls[i])
-          break
-        case 13:
-          a.videoThumbs.push(urls[i])
-          break
+    for (const m of appTree.sub['10']) {
+      if (m.sub && m.sub['1']) {
+        const t = m.sub['1'][0].int
+        if ([4, 1, 3, 13].includes(t)) {
+          if (m.sub['5']?.length) {
+            const url = m.sub['5'][0].string
+            if (t === 1) screenshots.push(url)
+            if (t === 3) videos.push(url)
+            if (t === 4) icon = url
+            if (t === 13) videoThumbs.push(url)
+          }
+        }
       }
-      return a
-    },
-    { screenshots: [], videos: [], videoThumbs: [] }
-  )
+    }
 
-  expect(icon).toEqual('https://play-lh.googleusercontent.com/qTt7JkhZ-U0kevENyTChyUijNUEctA3T5fh7cm8yzKUG0UAnMUgOMpG_9Ln7D24NbQ')
-  expect(screenshots.length).toEqual(6)
-  expect(screenshots[0]).toEqual('https://play-lh.googleusercontent.com/m-S0SqOv428DZcm46NJlyv0pffYpfsNjWz6iyf9LVM1TCWbzWs3clWaugjfzXXnCTbY')
-  expect(videos).toEqual(['https://youtu.be/XT7YEb9_Muw'])
-  expect(videoThumbs).toEqual(['https://i.ytimg.com/vi/XT7YEb9_Muw/hqdefault.jpg'])
+    expect(icon).toEqual('https://play-lh.googleusercontent.com/qTt7JkhZ-U0kevENyTChyUijNUEctA3T5fh7cm8yzKUG0UAnMUgOMpG_9Ln7D24NbQ')
+    expect(screenshots.length).toEqual(6)
+    expect(screenshots[0]).toEqual('https://play-lh.googleusercontent.com/m-S0SqOv428DZcm46NJlyv0pffYpfsNjWz6iyf9LVM1TCWbzWs3clWaugjfzXXnCTbY')
+    expect(videos).toEqual(['https://youtu.be/XT7YEb9_Muw'])
+    expect(videoThumbs).toEqual(['https://i.ytimg.com/vi/XT7YEb9_Muw/hqdefault.jpg'])
+  })
+
+  test('Groups', () => {
+    let icon
+    const screenshots = []
+    const videos = []
+    const videoThumbs = []
+
+    for (const m of appTree.sub['10']) {
+      if (m.sub && m.sub['1']) {
+        const t = m.sub['1'][0].int
+        if (t === 1) screenshots.push(m.sub['5'][0].string)
+        if (t === 3) videos.push(m.sub['5'][0].string)
+        if (t === 4) icon = m.sub['5'][0].string
+        if (t === 13) videoThumbs.push(m.sub['5'][0].string)
+      }
+    }
+
+    expect(icon).toEqual('https://play-lh.googleusercontent.com/qTt7JkhZ-U0kevENyTChyUijNUEctA3T5fh7cm8yzKUG0UAnMUgOMpG_9Ln7D24NbQ')
+    expect(screenshots.length).toEqual(6)
+    expect(screenshots[0]).toEqual('https://play-lh.googleusercontent.com/m-S0SqOv428DZcm46NJlyv0pffYpfsNjWz6iyf9LVM1TCWbzWs3clWaugjfzXXnCTbY')
+    expect(videos).toEqual(['https://youtu.be/XT7YEb9_Muw'])
+    expect(videoThumbs).toEqual(['https://i.ytimg.com/vi/XT7YEb9_Muw/hqdefault.jpg'])
+  })
 })
 
-test('field with groups (using sub query off main, with sub-queries)', () => {
-  let icon
-  const screenshots = []
-  const videos = []
-  const videoThumbs = []
-  for (const mediaItem of query(tree, '1.2.4.10:sub')) {
-    const type = query(mediaItem, '1:uint').pop()
-    const url = query(mediaItem, '5:string').pop()
-    switch (type) {
-      case 4:
-        icon = url
-        break
-      case 1:
-        screenshots.push(url)
-        break
-      case 3:
-        videos.push(url)
-        break
-      case 13:
-        videoThumbs.push(url)
-        break
+describe('Queries', () => {
+  test('Get id', () => {
+    expect(appTree.query('1:string')).toEqual(['com.blizzard.wtcg.hearthstone'])
+  })
+
+  test('Get title', () => {
+    expect(appTree.query('5:string')).toEqual(['Hearthstone'])
+  })
+
+  test('Get media', () => {
+    let icon
+    const screenshots = []
+    const videos = []
+    const videoThumbs = []
+
+    for (const m of appTree.query('10')) {
+      const t = m.query('1:int').pop()
+      if (t === 1) screenshots.push(m.query('5:string').pop())
+      if (t === 3) videos.push(m.query('5:string').pop())
+      if (t === 4) icon = m.query('5:string').pop()
+      if (t === 13) videoThumbs.push(m.query('5:string').pop())
     }
-  }
-  expect(icon).toEqual('https://play-lh.googleusercontent.com/qTt7JkhZ-U0kevENyTChyUijNUEctA3T5fh7cm8yzKUG0UAnMUgOMpG_9Ln7D24NbQ')
-  expect(screenshots.length).toEqual(6)
-  expect(screenshots[0]).toEqual('https://play-lh.googleusercontent.com/m-S0SqOv428DZcm46NJlyv0pffYpfsNjWz6iyf9LVM1TCWbzWs3clWaugjfzXXnCTbY')
-  expect(videos).toEqual(['https://youtu.be/XT7YEb9_Muw'])
-  expect(videoThumbs).toEqual(['https://i.ytimg.com/vi/XT7YEb9_Muw/hqdefault.jpg'])
+
+    expect(icon).toEqual('https://play-lh.googleusercontent.com/qTt7JkhZ-U0kevENyTChyUijNUEctA3T5fh7cm8yzKUG0UAnMUgOMpG_9Ln7D24NbQ')
+    expect(screenshots.length).toEqual(6)
+    expect(screenshots[0]).toEqual('https://play-lh.googleusercontent.com/m-S0SqOv428DZcm46NJlyv0pffYpfsNjWz6iyf9LVM1TCWbzWs3clWaugjfzXXnCTbY')
+    expect(videos).toEqual(['https://youtu.be/XT7YEb9_Muw'])
+    expect(videoThumbs).toEqual(['https://i.ytimg.com/vi/XT7YEb9_Muw/hqdefault.jpg'])
+  })
+
+  test('Groups', () => {
+    const widths = appTree.query('10.2.3:int')
+    const heights = appTree.query('10.2.4:int')
+    expect(widths.length).toEqual(heights.length)
+    expect(widths.length).toEqual(7)
+  })
+
+  test('Description', () => {
+    expect(appTree.query('7:string').length).toEqual(1)
+  })
 })

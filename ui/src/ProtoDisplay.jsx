@@ -1,6 +1,20 @@
-import RawProto, { decoders, parseLabels, wireLabels, wireTypes } from 'rawproto'
-import { useEffect, useState } from 'react'
-import Linkify from './Linkify.jsx'
+
+import { useState } from 'react'
+import { wireTypes } from 'rawproto'
+
+const parseLabels = {
+  int: 'Signed Integer',
+  uint: 'Unsigned Integer',
+  float: 'Decimal',
+  bool: 'Boolean',
+  string: 'String',
+  bytes: 'Bytes',
+  raw: 'Raw',
+  sub: 'Sub-Message',
+  packedint32: 'Packed Int32 Array',
+  packedint64: 'Packed Int64 Array',
+  packedvarint: 'Packed Variable-length Int Array'
+}
 
 const badgeColors = {}
 badgeColors[wireTypes.VARINT] = 'default'
@@ -9,65 +23,77 @@ badgeColors[wireTypes.I64] = 'accent'
 badgeColors[wireTypes.I32] = 'secondary'
 badgeColors[wireTypes.SGROUP] = 'primary'
 
-function ProtoField (field) {
-  const [sub, setSub] = useState()
 
-  useEffect(() => {
-    if (field.type === wireTypes.LEN || field.type === wireTypes.SGROUP) {
-      // try to parse it
-      try {
-        const s = new RawProto(field.value).readMessage()
-        setSub(s)
-      } catch (e) {
-        console.log(e)
-      }
-    }
-  }, [field.value])
+const hex = (b) => [...b].map((c) => c.toString(16).padStart(2, '0')).join(' ')
 
-  if (sub) {
-    return (
-      <details>
+export default function ProtoDisplay ({ open = false, tree, typeMap = {}, nameMap = {}, className }) {
+  const [o, setO] = useState(open)
+  if (tree) {
+    tree.renderType = 'sub'
+  }
+  return tree
+    ? (
+      <details open={o} className={className}>
         <summary>
-          <div className={`badge badge-${badgeColors[field.type]} gap-2`}>{field.index}</div>
-          <p className='text-gray-500 italic'>{parseLabels[field.renderType]}</p>
+          <div className={`badge badge-${badgeColors[tree.type]} gap-2`}>{tree.name || 'root (0)'}</div>
+          <p className='text-gray-500 italic'>{parseLabels[tree.renderType]}</p>
         </summary>
-        <ProtoDisplay fields={sub} />
+        <ul>
+          {Object.keys(tree?.sub || {}).map(n => tree.sub[n].map((field, fi) => {
+            field.renderType = typeMap[field?.path] || field.renderType
+            field.name = nameMap[field?.path] || n
+            if (field.type === wireTypes.LEN && !['string', 'bytes'].includes(field.renderType)) {
+              if (field.couldHaveSub) {
+                field.renderType = 'sub'
+                return (<li key={fi}><ProtoDisplay tree={field} typeMap={typeMap} nameMap={nameMap} /></li>)
+              } else {
+                field.renderType = field.likelyString ? 'string' : 'bytes'
+                return (
+                  <li key={fi}>
+                    <ProtoField field={field} />
+                  </li>
+                )
+              }
+            } else {
+              return (
+                <li key={fi}>
+                  <ProtoField field={field} />
+                </li>
+              )
+            }
+          }))}
+        </ul>
       </details>
+      )
+    : null
+}
+
+export function ProtoField ({ field }) {
+  if (field.renderType === 'bytes') {
+    return (
+      <div className='block'>
+        <span className={`mr-2 badge badge-${badgeColors[field.type]}`}>{field.name}</span>
+        <span className='mr-2 text-gray-500 italic'>{parseLabels[field.renderType]}</span>
+        <span>{hex(field.bytes)}</span>
+      </div>
     )
   }
 
-  return (
-    <div>
-      <div className={`badge badge-${badgeColors[field.type]} gap-2`}>{field.index}</div>
-      <Linkify>
-        <div className='flex w-full justify-between'>
-          <p>
-            {decoders.display(field)}
-          </p>
-          <p className='text-xs neutral-content/50'>
-            {`${wireLabels[field.type]}`}
-          </p>
-        </div>
-      </Linkify>
-    </div>
-  )
-}
-
-// this will display a message-tree
-export default function ProtoDisplay ({ className, fields }) {
-  if (!fields?.length) {
-    return ''
+  try {
+    return (
+      <div className='block'>
+        <span className={`mr-2 badge badge-${badgeColors[field.type]}`}>{field.name}</span>
+        <span className='mr-2 text-gray-500 italic'>{parseLabels[field.renderType]}</span>
+        <span>{field[field.renderType]}</span>
+      </div>
+    )
+  } catch (e) {
+    // sometimes parsing as renderType fails
+    return (
+      <div className='block'>
+        <span className={`bmr-2 adge badge-${badgeColors[field.type]}`}>{field.name}</span>
+        <span className='mr-2 text-gray-500 italic'>{parseLabels[field.renderType]}</span>
+      </div>
+    )
   }
-
-  return (
-    <ul className={className}>
-      {fields.map((field) => {
-        return (
-          <li key={field.index} title={`${wireLabels[field.type]} as ${parseLabels[field.renderType]}`}>
-            <ProtoField {...field} />
-          </li>
-        )
-      })}
-    </ul>
-  )
 }

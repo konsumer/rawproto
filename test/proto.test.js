@@ -1,56 +1,99 @@
-// test proto generation
+/* global test, expect, describe */
 
-/* global test expect */
-
+import { fileURLToPath } from 'url'
+import { join, dirname } from 'path'
+import { readFile } from 'fs/promises'
 import RawProto from 'rawproto'
 
-test.skip('A Simple Message', () => {
-  /*
-    1: 150
-  */
-  const j = new RawProto([0x08, 0x96, 0x01]).toProto()
-  expect(j).toEqual('int field1 = 1;')
+// build an initial array of the data I want to look at in Hearthstone
+const tree = new RawProto(await readFile(join(dirname(fileURLToPath(import.meta.url)), 'hearthstone.bin')))
+const appTree = tree.sub['1'][0].sub['2'][0].sub['4'][0]
+
+// You can build your protobuf bytes with this
+// import { promisify } from 'util'
+// import protobuf from 'protobufjs'
+// import data from './test.json'
+// const proto = promisify(protobuf.load)
+// const { Message } = await proto('test/test.proto')
+// const bytes = Message.encode(data).finish()
+// console.log(bytes.toString('base64'))
+
+const bytes = Buffer.from('CQAAAAAAwGJAFQAAFkMYlgEglgEolgEwlgE4rAJArAJNlgAAAFGWAAAAAAAAAF2WAAAAYZYAAAAAAAAAaAFyB3Rlc3Rpbmd6B3Rlc3RpbmeCAQOIAQKIAQKSAQQAAQIDmgEQAAAAAAEAAAACAAAAAwAAAKIBIAAAAAAAAAAAAQAAAAAAAAACAAAAAAAAAAMAAAAAAAAA', 'base64')
+
+const simplemap = {
+  double: '1:double',
+  float: '2:float',
+  int32: '3:int32',
+  int64: '4:int64',
+  uint32: '5:uint32',
+  uint64: '6:uint64',
+  sint32: '7:sint32',
+  sint64: '8:sint64',
+  fixed32: '9:fixed32',
+  fixed64: '10:fixed64',
+  sfixed32: '11:sfixed32',
+  sfixed64: '12:sfixed64',
+  bool: '13:bool',
+  string: '14:string',
+  bytes: '15:bytes',
+  sub: '16:sub',
+  'sub.enum': '16.17:int',
+  enum: '17:int',
+  packedvarint: '18:packedIntVar',
+  packedint32: '19:packedInt32',
+  packedint64: '20:packedInt64'
+}
+
+describe('Simple', () => {
+  test('Get JSON from binary proto', () => {
+    // TODO: commented need work
+    const p = new RawProto(bytes).toProto(simplemap)
+    expect(p).toEqual(`message MessageRoot {
+  double double = 1;
+  float float = 2;
+  int32 int32 = 3;
+  int64 int64 = 4;
+  uint32 uint32 = 5;
+  uint64 uint64 = 6;
+  sint32 sint32 = 7;
+  sint64 sint64 = 8;
+  fixed32 fixed32 = 9;
+  fixed64 fixed64 = 10;
+  sfixed32 sfixed32 = 11;
+  sfixed64 sfixed64 = 12;
+  bool bool = 13;
+  string string = 14;
+  bytes bytes = 15;
+  Message16 sub = 16;
+  message Message16 {
+    int enum = 17;
+  }
+  int enum = 17;
+  Message18 packedvarint = 18;
+  message Message18 {
+    repeated int f0 = 0;
+  }
+  bytes packedint32 = 19;
+  bytes packedint64 = 20;
+}`)
+  })
 })
 
-test.skip('Traverse Submessages', () => {
-  /*
-    3: {1: 150}
-  */
-
-  const b = [0x1a, 0x03, 0x08, 0x96, 0x01]
-
-  // it's bytes by default
-  let j = new RawProto(b).toProto()
-  expect(j).toEqual('bytes field3 = 3;')
-
-  // we can force types with choices
-  j = new RawProto(b, { 3: 'sub' }).toProto()
-  expect(j).toEqual('Message3 {\n  int field1 = 1;\n}')
-})
-
-test.skip('Length-Delimited Records', () => {
-  /*
-    2: {"testing"}
-  */
-  const j = new RawProto([0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67]).toProto()
-  expect(j).toEqual({ 2: ['testing'] })
-})
-
-test.skip('Repeated Elements', () => {
-  /*
-    4: {"hello"}
-    5: 1
-    5: 2
-    5: 3
-  */
-  const j = new RawProto([0x22, 0x05, 0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x28, 0x01, 0x28, 0x02, 0x28, 0x03]).toProto()
-  expect(j).toEqual({ 4: ['hello'], 5: [1, 2, 3] })
-})
-
-test.skip('Packed Repeated Fields', () => {
-  /*
-    6: {3 270 86942}
-  */
-  const j = new RawProto([0x32, 0x06, 0x03, 0x8e, 0x02, 0x9e, 0xa7, 0x05], { 6: 'packedvarint' }).toProto()
-  expect(j).toEqual({ 6: [[3, 270, 86942]] })
+describe('Hearthstone', () => {
+  test('Get proto SDL from binary proto', () => {
+    const p = appTree.toProto({
+      id: '1.2.4.1:string',
+      title: '1.2.4.5:string',
+      company: '1.2.4.6:string',
+      description: '1.2.4.7:string'
+    })
+    expect(p.startsWith(`message MessageRoot {
+  string id = 1;
+  bytes f2 = 2;
+  int f3 = 3;
+  int f4 = 4;
+  string title = 5;
+  string company = 6;
+  string description = 7;`)).toBeTruthy()
+  })
 })

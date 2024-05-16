@@ -1,8 +1,12 @@
 import { useRef, useState } from 'react'
 
-const fromHexString = (hexString) => Uint8Array.from(hexString.split(' ').filter(e => e).map((byte) => parseInt(byte, 16)))
+const fromHexString = (hexString) => {
+  const b = Uint8Array.from(hexString.split(' ').filter(e => e).map((byte) => parseInt(byte, 16)))
+  console.log(b)
+  return b
+}
 
-export default function ButtonHex ({ className = 'btn btn-neutral', children = 'STRING', onChange }) {
+export default function ButtonHex ({ className = 'btn btn-neutral', children = 'ENTER HEX', onChange }) {
   const [value, setValue] = useState('')
   const r = useRef()
 
