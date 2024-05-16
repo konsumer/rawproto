@@ -11,6 +11,7 @@ function App () {
   const [nameMap, setNameMap] = useState({})
   const [typeMap, setTypeMap] = useState({})
 
+
   const handleFileChange = async (e) => {
     const file = e.target.files[0]
     if (file) {

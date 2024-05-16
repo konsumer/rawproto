@@ -1,3 +1,4 @@
+
 import { useState } from 'react'
 import { wireTypes } from 'rawproto'
 
@@ -21,6 +22,7 @@ badgeColors[wireTypes.LEN] = 'primary'
 badgeColors[wireTypes.I64] = 'accent'
 badgeColors[wireTypes.I32] = 'secondary'
 badgeColors[wireTypes.SGROUP] = 'primary'
+
 
 const hex = (b) => [...b].map((c) => c.toString(16).padStart(2, '0')).join(' ')
 
