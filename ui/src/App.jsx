@@ -5,12 +5,13 @@ import ProtoDisplay from './ProtoDisplay.jsx'
 import ErrorBoundary from './ErrorBoundary.jsx'
 import ButtonHex from './ButtonHex.jsx'
 import ButtonFieldType from './ButtonFieldType.jsx'
+import ButtonDownloadJSON from './ButtonDownloadJSON.jsx'
+import ButtonDownloadProto from './ButtonDownloadProto.jsx'
 
 function App () {
   const [fields, setFields] = useState()
   const [nameMap, setNameMap] = useState({})
   const [typeMap, setTypeMap] = useState({})
-
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0]
@@ -43,16 +44,20 @@ function App () {
           <div>
             <input type='file' className='mb-2 w-full file-input' onChange={handleFileChange} />
           </div>
+          {!!fields && (<ButtonDownloadJSON tree={fields} typeMap={typeMap} nameMap={typeMap} />)}
+          {!!fields && (<ButtonDownloadProto tree={fields} typeMap={typeMap} nameMap={typeMap} />)}
         </div>
 
-        <ErrorBoundary>
-          <ul className='w-full menu bg-base-200 rounded-box'>
-            <li>
-              <ProtoDisplay tree={fields} open typeMap={typeMap} nameMap={nameMap} />
-            </li>
-          </ul>
+        {!!fields && (
+          <ErrorBoundary>
+            <ul className='w-full menu bg-base-200 rounded-box'>
+              <li>
+                <ProtoDisplay tree={fields} open typeMap={typeMap} nameMap={nameMap} />
+              </li>
+            </ul>
 
-        </ErrorBoundary>
+          </ErrorBoundary>
+        )}
       </main>
       <footer className='p-5 text-center bg-neutral text-neutral-content'>
         <p>

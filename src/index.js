@@ -384,12 +384,12 @@ export class ReaderMessage {
     return query(this, this.path, ...queries)
   }
 
-  toJS (queryMap = {}, prefix = 'f') {
-    return toJS(this, queryMap, prefix)
+  toJS (queryMap = {}, prefix = 'f', nameMap, typeMap) {
+    return toJS(this, queryMap, prefix, nameMap, typeMap)
   }
 
-  toProto (queryMap = {}, prefix = 'f') {
-    return toProto(this, queryMap, prefix, queryMap)
+  toProto (queryMap = {}, prefix = 'f', nameMap, typeMap, messageName = 'MessageRoot') {
+    return toProto(this, queryMap, prefix, nameMap, typeMap, messageName)
   }
 }
 
