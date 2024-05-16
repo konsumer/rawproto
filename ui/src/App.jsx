@@ -6,7 +6,7 @@ import ErrorBoundary from './ErrorBoundary.jsx'
 import ButtonHex from './ButtonHex.jsx'
 
 function App () {
-  const [fields, setFields] = useState([])
+  const [fields, setFields] = useState()
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0]
@@ -36,7 +36,7 @@ function App () {
         </div>
 
         <ErrorBoundary>
-          <ProtoDisplay tree={fields} open />
+          <ProtoDisplay tree={fields} open className='w-full menu bg-base-200 rounded-box' />
         </ErrorBoundary>
       </main>
       <footer className='p-5 text-center bg-neutral text-neutral-content'>
