@@ -47,8 +47,6 @@ export default function ProtoDisplay ({ open = false, tree, typeMap = {}, nameMa
                 field.renderType = 'bytes'
                 return (
                   <li key={fi}>
-                    <div className={`badge badge-${badgeColors[field.type]} gap-2`}>{n}</div>
-                    <p className='text-gray-500 italic'>{parseLabels[field.renderType]}</p>
                     <ProtoField index={n} field={field} />
                   </li>
                 )
@@ -56,8 +54,6 @@ export default function ProtoDisplay ({ open = false, tree, typeMap = {}, nameMa
             } else {
               return (
                 <li key={fi}>
-                  <div className={`badge badge-${badgeColors[field.type]} gap-2`}>{n}</div>
-                  <p className='text-gray-500 italic'>{parseLabels[field.renderType]}</p>
                   <ProtoField index={n} field={field} />
                 </li>
               )
@@ -71,18 +67,28 @@ export default function ProtoDisplay ({ open = false, tree, typeMap = {}, nameMa
 
 export function ProtoField ({ field, index }) {
   if (field.renderType === 'bytes') {
-    return <div className='bg-base-500'>{hex(field.bytes)}</div>
+    return (
+      <div className='block'>
+        <span className={`mr-2 badge badge-${badgeColors[field.type]}`}>{index}</span>
+        <span className='mr-2 text-gray-500 italic'>{parseLabels[field.renderType]}</span>
+        <span>{hex(field.bytes)}</span>
+      </div>
+    )
   }
 
   try {
     return (
       <div>
+        <span className={`badge badge-${badgeColors[field.type]}`}>{index}</span>
+        <span className='text-gray-500 italic'>{parseLabels[field.renderType]}</span>
         {index}:{field.renderType} - {field[field.renderType]}
       </div>
     )
   } catch (e) {
     return (
       <div>
+        <span className={`badge badge-${badgeColors[field.type]}`}>{index}</span>
+        <span className='text-gray-500 italic'>{parseLabels[field.renderType]}</span>
         {index}:{field.renderType}
       </div>
     )

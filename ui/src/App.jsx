@@ -36,7 +36,12 @@ function App () {
         </div>
 
         <ErrorBoundary>
-          <ProtoDisplay tree={fields} open className='w-full menu bg-base-200 rounded-box' />
+          <ul className='w-full menu bg-base-200 rounded-box'>
+            <li>
+              <ProtoDisplay tree={fields} open className='' />
+            </li>
+          </ul>
+
         </ErrorBoundary>
       </main>
       <footer className='p-5 text-center bg-neutral text-neutral-content'>
