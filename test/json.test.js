@@ -1,3 +1,5 @@
+// JSON-safe values & correct output for toJS
+
 /* global test, expect, describe */
 
 import { fileURLToPath } from 'url'
@@ -46,24 +48,26 @@ const simplemap = {
 
 describe('Simple', () => {
   test('Get JSON from binary proto', () => {
-    // TODO: commented need work
-    const j = new RawProto(bytes).toJS(simplemap)
+    const j = JSON.parse(JSON.stringify(new RawProto(bytes).toJS(simplemap)))
     expect(j.double).toEqual([150])
     expect(j.float).toEqual([150])
     expect(j.int32).toEqual([150])
     expect(j.int64).toEqual([150])
     expect(j.uint32).toEqual([150])
     expect(j.uint64).toEqual([150])
-    // expect(j.sint32).toEqual([150]) // 300
-    // expect(j.sint64).toEqual([150]) // 300
     expect(j.fixed32).toEqual([150])
     expect(j.fixed64).toEqual([150])
     expect(j.sfixed32).toEqual([150])
     expect(j.sfixed64).toEqual([150])
     expect(j.bool).toEqual([true])
     expect(j.string).toEqual(['testing'])
-    expect(j.bytes).toEqual([new Uint8Array([116, 101, 115, 116, 105, 110, 103])])
+    expect(j.bytes).toEqual([{ 0: 116, 1: 101, 2: 115, 3: 116, 4: 105, 5: 110, 6: 103 }])
     expect(j.sub.enum).toEqual([2])
+
+    // TODO: these are broke
+
+    // expect(j.sint32).toEqual([150]) // 300
+    // expect(j.sint64).toEqual([150]) // 300
     // expect(j.sub.packedvarint).toEqual([[0, 1, 2, 3]])
     // expect(j.sub.packedint32).toEqual([[0, 1, 2, 3]])
     // expect(j.sub.packedint64).toEqual([[0, 1, 2, 3]])
@@ -75,12 +79,12 @@ describe('Simple', () => {
 
 describe('Hearthstone', () => {
   test('Get JSON from binary proto', () => {
-    const j = appTree.toJS({
+    const j = JSON.parse(JSON.stringify(appTree.toJS({
       id: '1.2.4.1:string',
       title: '1.2.4.5:string',
       company: '1.2.4.6:string',
       description: '1.2.4.7:string'
-    })
+    })))
     expect(j.id).toEqual(['com.blizzard.wtcg.hearthstone'])
     expect(j.title).toEqual(['Hearthstone'])
     expect(j.company).toEqual(['Blizzard Entertainment, Inc.'])

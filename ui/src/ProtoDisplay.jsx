@@ -23,17 +23,15 @@ badgeColors[wireTypes.I64] = 'accent'
 badgeColors[wireTypes.I32] = 'secondary'
 badgeColors[wireTypes.SGROUP] = 'primary'
 
-
 const hex = (b) => [...b].map((c) => c.toString(16).padStart(2, '0')).join(' ')
 
 export default function ProtoDisplay ({ open = false, tree, typeMap = {}, nameMap = {}, className }) {
-  const [o, setO] = useState(open)
   if (tree) {
     tree.renderType = 'sub'
   }
   return tree
     ? (
-      <details open={o} className={className}>
+      <details className={className} open={open}>
         <summary>
           <div className={`badge badge-${badgeColors[tree.type]} gap-2`}>{tree.name || 'root (0)'}</div>
           <p className='text-gray-500 italic'>{parseLabels[tree.renderType]}</p>

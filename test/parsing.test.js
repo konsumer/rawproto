@@ -1,3 +1,5 @@
+// Low-level parsing, and starting with different buffer-like objects
+
 /* global test, expect, describe */
 
 import RawProto, { wireTypes, hex } from 'rawproto'
