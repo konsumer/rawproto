@@ -8,6 +8,7 @@
     "build": "vite build"
   },
   "dependencies": {
+    "flat": "^6.0.1",
     "linkify-plugin-hashtag": "^4.1.3",
     "linkify-react": "^4.1.3",
     "react": "^18.2.0",
