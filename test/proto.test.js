@@ -1,3 +1,5 @@
+// Protobuf SDL generation from toProto
+
 /* global test, expect, describe */
 
 import { fileURLToPath } from 'url'

@@ -1,4 +1,4 @@
-// tests that show how to actually parse some real protobuf, in a practical sense
+// Show how to actually parse some real protobuf, in a practical sense
 
 /* global describe test expect */
 
