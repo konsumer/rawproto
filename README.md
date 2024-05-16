@@ -74,12 +74,37 @@ FIXED32 - int, uint, bytes, float, string
 - Groups are treated as repeated `LEN` message-fields
 - `LEN` will try to be parsed as sub-tree, but you can override with other types in `query` (for example if it tries to make a sub-message with part of a string)
 
+## query-map
+
+Many things (ui, `toJS`, `toProto`, cli) use `queryMap` which is just a map of `name` to `path:type`. Here is one that works well with [hearthstone test data](https://github.com/konsumer/rawproto/raw/master/test/hearthstone.bin):
+
+```json
+{
+  "id": "1.2.4.1:string",
+  "title": "1.2.4.5:string",
+  "company": "1.2.4.6:string",
+  "description": "1.2.4.7:string",
+
+  "media": "1.2.4.10",
+  
+  "dimensions": "1.2.4.10.2",
+  "width": "1.2.4.10.2.3:uint",
+  "height": "1.2.4.10.2.4:uint",
+
+  "url": "1.2.4.10.5:string",
+  "type": "1.2.4.10.1:uint",
+  "bg": "1.2.4.10.15:string"
+}
+```
+
+You can use any types, from above, and set the name to whatever you want.
+
 ## migration
 
 I used to have the functionality of this lib split up into several other projects. Here is migration instructions, if you want to update to this one (recommended):
 
 - [protobuf-decoder](https://github.com/konsumer/protobuf-decoder) -  just use [site](https://konsumer.js.org/rawproto/). The code is [here](https://github.com/konsumer/rawproto/tree/master/ui)
-- [rawprotoparse](https://github.com/konsumer/rawprotoparse) - this originally would create JSON from protobuf binary. If you were using this as-is, it had a lot of options, which have been merged into either `toJS` (see [tests](https://github.com/konsumer/rawproto/blob/master/test/json.test.js) for examples) or a custom field-mapper, which you can do with `walk()`. It may require a little bit more custom-code, if you ware not using it with defaults, but overall should work better, and merges shared code that was in both libs. Main thing is that regular `toJS`, without a custom-mapper, will make all values an array, since it's possible for any field ID to be found multiple times.
+- [rawprotoparse](https://github.com/konsumer/rawprotoparse) - this originally would create JSON from protobuf binary. If you were using this as-is, it had a lot of options, which have been merged into either `toJS` (see [tests](https://github.com/konsumer/rawproto/blob/master/test/json.test.js) for examples.) It may require a little bit more custom-code, if you were not using it with defaults, but overall should work better, and merges shared code that was in both libs. Main thing is that regular `toJS`, without a custom-mapper, will make all values an array, since it's possible for any field ID to be found multiple times.
 - [newrawprotoparser](https://github.com/konsumer/newrawprotoparser) - this was some of the start of ideas for this. No one is probly using this. Essentially, it's the same stuff in [path](https://github.com/konsumer/rawproto/blob/master/test/path.test.js)
 - [protoquery](https://github.com/konsumer/protoquery) - this was some of the start of ideas for this. No one is probly using this. Essentially it's the same stuff in [query](https://github.com/konsumer/rawproto/blob/master/test/query.test.js)
 - rawproto - This lib used to be able to do JSON and generate proto, and provided a different CLI. You should be able to use the new APIs to accomplish all the same stuff, but it may require a bit of a change to your code. Have a look at the [unit-tests](https://github.com/konsumer/rawproto/tree/master/test), to get an idea of how it works.
