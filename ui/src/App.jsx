@@ -44,8 +44,8 @@ function App () {
           <div>
             <input type='file' className='mb-2 w-full file-input' onChange={handleFileChange} />
           </div>
-          {!!fields && (<ButtonDownloadJSON tree={fields} typeMap={typeMap} nameMap={typeMap} />)}
-          {!!fields && (<ButtonDownloadProto tree={fields} typeMap={typeMap} nameMap={typeMap} />)}
+          {!!fields && (<ButtonDownloadJSON tree={fields} typeMap={typeMap} nameMap={nameMap} />)}
+          {!!fields && (<ButtonDownloadProto tree={fields} typeMap={typeMap} nameMap={nameMap} />)}
         </div>
 
         {!!fields && (
