@@ -11,18 +11,6 @@ import RawProto from 'rawproto'
 const tree = new RawProto(await readFile(join(dirname(fileURLToPath(import.meta.url)), 'hearthstone.bin')))
 const appTree = tree.sub['1'][0].sub['2'][0].sub['4'][0]
 
-// for .map(), this will force types of fields, and give them names in .toJS()
-const queryMap = {
-  id: '1.2.4.1:string',
-  idBytes: '1.2.4.2:bytes',
-  title: '1.2.4.5:string',
-  description: '1.2.4.7:string',
-  mediaTypes: '1.2.4.10.1:int',
-  mediaUrls: '1.2.4.10.5:string',
-  mediaWidths: '1.2.4.10.2.3:int',
-  mediaHeights: '1.2.4.10.2.4:int'
-}
-
 test('Get fields of appTree', () => {
   // this is the counts of every field
   expect(appTree.fields).toEqual({ 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 10: 10, 13: 1, 14: 1, 15: 1, 16: 1, 17: 1, 18: 1, 21: 1, 24: 1, 25: 1, 26: 1, 27: 1, 29: 1, 32: 1, 34: 1, 38: 1, 39: 1, 40: 1, 43: 1, 45: 1, 46: 1, 48: 1, 50: 1, 51: 1 })

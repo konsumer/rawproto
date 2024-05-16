@@ -4,9 +4,12 @@ import Reader from 'rawproto'
 import ProtoDisplay from './ProtoDisplay.jsx'
 import ErrorBoundary from './ErrorBoundary.jsx'
 import ButtonHex from './ButtonHex.jsx'
+import ButtonFieldType from './ButtonFieldType.jsx'
 
 function App () {
   const [fields, setFields] = useState()
+  const [nameMap, setNameMap] = useState({})
+  const [typeMap, setTypeMap] = useState({})
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0]
@@ -21,6 +24,11 @@ function App () {
     setFields(tree)
   }
 
+  const handleMapChange = v => {
+    setNameMap(v.nameMap)
+    setTypeMap(v.typeMap)
+  }
+
   return (
     <div className='flex flex-col h-screen'>
       <header className='p-4 h-16 flex'>
@@ -29,6 +37,7 @@ function App () {
       <main className='p-4 grow overflow-y-auto'>
         {!fields?.length && <p className='mb-2'>Choose a binary protobuf file, or input a string, and you can explore it. No data is sent to any server (all local.)</p>}
         <div className='flex gap-2'>
+          <ButtonFieldType onChange={handleMapChange} map={{ typeMap, nameMap }} />
           <ButtonHex onChange={handleHexChange} />
           <div>
             <input type='file' className='mb-2 w-full file-input' onChange={handleFileChange} />
@@ -38,7 +47,7 @@ function App () {
         <ErrorBoundary>
           <ul className='w-full menu bg-base-200 rounded-box'>
             <li>
-              <ProtoDisplay tree={fields} open className='' />
+              <ProtoDisplay tree={fields} open typeMap={typeMap} nameMap={nameMap} />
             </li>
           </ul>
 

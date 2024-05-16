@@ -6,7 +6,7 @@ const fromHexString = (hexString) => {
   return b
 }
 
-export default function ButtonHex ({ className = 'btn btn-neutral', children = 'STRING', onChange }) {
+export default function ButtonHex ({ className = 'btn btn-neutral', children = 'ENTER HEX', onChange }) {
   const [value, setValue] = useState('')
   const r = useRef()
 
