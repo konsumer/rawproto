@@ -75,30 +75,21 @@ export class ProtobufDecoder {
       }
       const tag = this.decodeVarint().int
       const wireType = tag & 0x07
-      const number = tag >> 3
-      if (wireType === 4 && number === fieldNumber) {
+      const number = tag >> 0x03
+      if (wireType === 4) {
         break // End of group
       }
-      const value = this.decodeField(tag)
-      if (group[number]) {
-        if (!Array.isArray(group[number])) {
-          group[number] = [group[number]]
-        }
-        group[number].push(value)
-      } else {
-        group[number] = value
-      }
+      const value = this.decodeField(tag, wireType)
+      group[number] ||= []
+      value.fieldNumber = number
+      group[number].push(value)
     }
     return { group, value: this.buffer.slice(start, this.pos) }
   }
 
-  decodeField (tag) {
-    const wireType = tag & 0x07
-    const fieldNumber = tag >> 3
+  decodeField (fieldNumber, wireType) {
     this.debug(`Decoding field number ${fieldNumber} with wire type ${wireType}`)
-
     let out = { wireType, fieldNumber }
-
     switch (wireType) {
       case 0: // Varint
         out = { ...out, ...this.decodeVarint() }; break
@@ -107,7 +98,8 @@ export class ProtobufDecoder {
       case 2: // Length-delimited (string, bytes, or nested message)
         out.value = this.decodeBytes(this.decodeVarint().int); break
       case 3: // Start group
-        out = { ...out, ...this.decodeGroup(fieldNumber) }; break
+        const d = this.decodeGroup(fieldNumber)
+        out = { ...out, ...d }; break
       case 4: // End group
         throw new Error('Unexpected end group tag')
       case 5: // 32-bit
@@ -115,7 +107,6 @@ export class ProtobufDecoder {
       default:
         throw new Error(`Unsupported wire type: ${wireType}`)
     }
-
     return out
   }
 
@@ -123,16 +114,14 @@ export class ProtobufDecoder {
     const result = {}
     while (this.pos < this.buffer.length) {
       const tag = this.decodeVarint().int
-      const fieldNumber = tag >> 3
-      const value = this.decodeField(tag)
-
-      if (result[fieldNumber]) {
-        if (!Array.isArray(result[fieldNumber])) {
-          result[fieldNumber] = [result[fieldNumber]]
-        }
-        result[fieldNumber].push(value)
+      const wireType = tag & 0x07
+      const fieldNumber = tag >> 0x03
+      result[fieldNumber] ||= []
+      const v = this.decodeField(fieldNumber, wireType)
+      if (Array.isArray(v)) {
+        result[fieldNumber].push(...v)
       } else {
-        result[fieldNumber] = value
+        result[fieldNumber].push(v)
       }
     }
     return result
@@ -195,33 +184,105 @@ export function query (root, q) {
   for (const p of findPath) {
     const nc = []
     for (const tree of current) {
-      if (Array.isArray(tree[p])) {
-        nc.push(...tree[p].map(b => decodeMessage(b.value)))
-      } else {
-        nc.push(decodeMessage(tree[p].value))
+      try {
+        nc.push(...tree[p].map(t => {
+          if (t.group) {
+            return t.group
+          }
+          return decodeMessage(t.value)
+        }))
+      } catch (e) {
+        // console.error(e.message)
       }
     }
     current = nc
   }
 
-  return current.map(c => decoders[renderType](c[fieldId]))
+  const out = []
+  for (const c of current) {
+    for (const tree of c[fieldId]) {
+      out.push(decoders[renderType](tree))
+    }
+  }
+  return out
 }
+
+// USAGE TESTING BELOW
 
 const root = decodeMessage(await readFile(join(dirname(fileURLToPath(import.meta.url)), 'hearthstone.bin')))
 
-describe('Query', async () => {
-  test('Basic Fields', () => {
+// this is how to manually delve into each field
+describe('Manual', () => {
+  // 1.2.4
+  const sub1 = decodeMessage(root[1][0].value)
+  const sub2 = decodeMessage(sub1[2][0].value)
+  const appRoot = decodeMessage(sub2[4][0].value)
+
+  test('ID', () => {
+    expect(decoders.string(appRoot[1][0])).toEqual('com.blizzard.wtcg.hearthstone')
+  })
+
+  test('Title', () => {
+    expect(decoders.string(appRoot[5][0])).toEqual('Hearthstone')
+  })
+
+  test('Group Sub-query (media)', () => {
+    const mediaItems = []
+    for (const m of appRoot[10]) {
+      const mediaRoot = decodeMessage(m.value)
+      const type = decoders.uint(mediaRoot[1][0])
+      const url = decoders.string(mediaRoot[5][0])
+      let width
+      let height
+      try {
+        width = decoders.uint(mediaRoot[2][0].group[3][0])
+        height = decoders.uint(mediaRoot[2][0].group[4][0])
+      } catch (e) {}
+
+      mediaItems.push({ type, url, width, height })
+    }
+    expect(mediaItems.length).toEqual(10)
+  })
+})
+
+// this is how to do same with queries (probly better, in general)
+
+describe('Query', () => {
+  test('ID', () => {
     expect(query(root, '1.2.4.1:string').pop()).toEqual('com.blizzard.wtcg.hearthstone')
+  })
+
+  test('Title', () => {
     expect(query(root, '1.2.4.5:string').pop()).toEqual('Hearthstone')
   })
 
   test('Group Sub-query (media)', () => {
-    const medias = query(root, '1.2.4.10:sub').map(r => ({
-      type: query(r, '1:uint').pop(),
-      url: query(r, '5:string').pop(),
-      width: query(r, '2.3:uint').pop(),
-      height: query(r, '2.4:uint').pop()
-    }))
-    expect(medias.length).toEqual(10)
+    const types = query(root, '1.2.4.10.1:uint')
+    expect(types.length).toEqual(10)
+
+    const urls = query(root, '1.2.4.10.5:string')
+    expect(urls.length).toEqual(10)
+
+    // not all types have height/width, so it's only 8
+
+    const widths = query(root, '1.2.4.10.2.3:uint')
+    expect(widths.length).toEqual(8)
+
+    const heights = query(root, '1.2.4.10.2.4:uint')
+    expect(heights.length).toEqual(8)
+
+    // here is how to build a cohesive object, since types 3/13 do not have dims
+    let type
+    const mediaItems = []
+    while (type = types.pop()) {
+      let width
+      let height
+      if (![3, 13].includes(type)) {
+        width = widths.pop()
+        height = heights.pop()
+      }
+      mediaItems.push({ type, url: urls.pop(), width, height })
+    }
+    expect(mediaItems.length).toEqual(10)
   })
 })
