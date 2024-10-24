@@ -39,8 +39,8 @@ const simplemap = {
   string: '14:string',
   bytes: '15:bytes',
   sub: '16:sub',
-  'sub.enum': '16.17:int',
-  enum: '17:int',
+  'sub.enum': '16.1:int32',
+  enum: '17:int32',
   packedvarint: '18:packedIntVar',
   packedint32: '19:packedInt32',
   packedint64: '20:packedInt64'
@@ -68,12 +68,12 @@ describe('Simple', () => {
   bytes bytes = 15;
   Message16 sub = 16;
   message Message16 {
-    int enum = 17;
+    int32 f1 = 1;
   }
-  int enum = 17;
+  int32 enum = 17;
   Message18 packedvarint = 18;
   message Message18 {
-    repeated int f0 = 0;
+    repeated int32 f1 = 1;
   }
   bytes packedint32 = 19;
   bytes packedint64 = 20;
@@ -92,8 +92,8 @@ describe('Hearthstone', () => {
     expect(p.startsWith(`message MessageRoot {
   string id = 1;
   bytes f2 = 2;
-  int f3 = 3;
-  int f4 = 4;
+  int32 f3 = 3;
+  int32 f4 = 4;
   string title = 5;
   string company = 6;
   string description = 7;`)).toBeTruthy()

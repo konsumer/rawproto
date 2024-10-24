@@ -12,10 +12,10 @@ export const wireTypes = {
 const dec = new TextDecoder()
 
 export const wireMap = {
-  0: ['uint', 'int', 'int32', 'int64', 'uint32', 'uint64', 'sint32', 'sint64', 'bool', 'raw', 'bytes'],
-  1: ['uint', 'int', 'bytes', 'fixed64', 'sfixed64', 'double'],
+  0: ['uint32', 'int32', 'int64', 'uint64', 'sint32', 'sint64', 'bool', 'raw', 'bytes'],
+  1: ['uint32', 'int32', 'bytes', 'fixed64', 'sfixed64', 'double'],
   2: ['raw', 'bytes', 'string', 'sub', 'packedIntVar', 'packedInt32', 'packedInt64'],
-  5: ['uint', 'int', 'bytes', 'fixed32', 'sfixed32', 'float', 'raw']
+  5: ['uint32', 'int32', 'bytes', 'fixed32', 'sfixed32', 'float', 'raw']
 }
 
 export class ReaderFixed {
@@ -280,7 +280,7 @@ export class ReaderMessage {
         if (type === wireTypes.VARINT) {
           const s = this.offset
           const value = parseInt(this.readVarInt())
-          const reader = new ReaderVarInt(this.buffer.slice(s, this.offset - 1), [this.path, index].join('.'), 'int', value)
+          const reader = new ReaderVarInt(this.buffer.slice(s, this.offset - 1), [this.path, index].join('.'), 'int32', value)
           this._sub[index].push(reader)
           rollbackOffset = this.offset
         }
@@ -464,7 +464,7 @@ export function toJS (tree, queryMap, prefix = 'f', nameMap, typeMap) {
 const prefixify = (prefix, path) => path.split('.').map((v, k, a) => `${prefix}${v}`).join('.')
 const indentString = (str, count, indent = ' ') => str.replace(/^/gm, indent.repeat(count))
 
-export function toProto (tree, queryMap, prefix = 'f', nameMap, typeMap, messageName = 'MessageRoot', indent = 0) {
+export function toProto (tree, queryMap, prefix = 'f', nameMap, typeMap, messageName = 'MessageRoot', indent = 0, isSub = false) {
   const out = []
 
   // this is used as a marker that it's top-level
@@ -487,8 +487,12 @@ export function toProto (tree, queryMap, prefix = 'f', nameMap, typeMap, message
 
   out.push(`message ${messageName} {`)
 
-  for (const n of Object.keys(tree.sub || {})) {
-    const f = tree?.sub[n]
+  const treekeys = Object.keys(tree.sub || {})
+
+  for (const n in treekeys) {
+    const fn = parseInt(n) + 1
+
+    const f = tree?.sub[treekeys[n]]
     if (!f[0]?.path) {
       // not really sure why this happens
       continue
@@ -496,7 +500,7 @@ export function toProto (tree, queryMap, prefix = 'f', nameMap, typeMap, message
     let repeated = ''
     let options = ''
     let renderType = typeMap[f[0]?.path] || f[0].renderType
-    const name = nameMap[f[0].path] ? nameMap[f[0].path].split('.').pop() : `${prefix}${n}`
+    const name = nameMap[f[0].path] ? nameMap[f[0].path].split('.').pop() : `${prefix}${fn}`
 
     if (f.length > 1) {
       repeated = 'repeated '
@@ -522,13 +526,13 @@ export function toProto (tree, queryMap, prefix = 'f', nameMap, typeMap, message
 
     if (typeof f[0] === 'object' && f[0].type === wireTypes.LEN && !['string', 'bytes'].includes(renderType)) {
       if (f[0].couldHaveSub) {
-        out.push(indentString(`Message${n} ${name} = ${n};`, 2))
-        out.push(toProto(f[0], undefined, prefix, nameMap, typeMap, messageName = `Message${n}`, indent + 1))
+        out.push(indentString(`Message${fn} ${name} = ${fn};`, 2))
+        out.push(toProto(f[0], undefined, prefix, nameMap, typeMap, `Message${fn}`, indent + 1, true))
       } else {
-        out.push(indentString(`bytes ${name} = ${n};`, 2))
+        out.push(indentString(`bytes ${name} = ${fn};`, 2))
       }
     } else {
-      out.push(indentString(`${repeated}${renderType} ${name} = ${n}${options};`, 2))
+      out.push(indentString(`${repeated}${renderType} ${name} = ${fn}${options};`, 2))
     }
   }
 

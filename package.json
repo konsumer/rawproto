@@ -23,6 +23,7 @@
     "@vitest/coverage-v8": "^1.5.3",
     "@vitest/ui": "^1.6.0",
     "microbundle": "^0.15.1",
+    "protobufjs": "^7.4.0",
     "vitest": "^1.5.3"
   },
   "scripts": {
