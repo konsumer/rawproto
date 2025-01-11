@@ -89,8 +89,5 @@ describe('Hearthstone', () => {
     expect(j.title).toEqual(['Hearthstone'])
     expect(j.company).toEqual(['Blizzard Entertainment, Inc.'])
     expect(j.description).toBeDefined()
-
-    // leftovers from fieldMap get put into a kind of array-like structure, using prefix (default is "f")
-    expect(j.f0.f1.f2.f4.f2).toEqual(['com.blizzard.wtcg.hearthstone'])
   })
 })

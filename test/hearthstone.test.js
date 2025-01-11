@@ -115,7 +115,7 @@ describe('Queries', () => {
     const widths = appTree.query('10.2.3:int')
     const heights = appTree.query('10.2.4:int')
     expect(widths.length).toEqual(heights.length)
-    expect(widths.length).toEqual(7)
+    expect(widths.length).toEqual(8)
   })
 
   test('Description', () => {

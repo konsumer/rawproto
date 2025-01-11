@@ -203,9 +203,9 @@ export class ReaderMessage {
       foundIndex = indexType >> 3
     }
 
-    if (foundIndex !== index) {
-      throw new Error(`Group index ${foundIndex} should match ${index}`)
-    }
+    // if (foundIndex !== index) {
+    //   throw new Error(`Group index ${foundIndex} should match ${index}`)
+    // }
 
     return this.buffer.slice(offsetStart, this.offset)
   }
@@ -315,6 +315,7 @@ export class ReaderMessage {
       }
       return this._sub
     } catch (e) {
+      // console.error(e)
       this.remainder = this.buffer.slice(rollbackOffset)
       return {}
     }

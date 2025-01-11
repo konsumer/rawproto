@@ -89,9 +89,17 @@ describe('Hearthstone', () => {
       company: '1.2.4.6:string',
       description: '1.2.4.7:string'
     })
+
     expect(p.startsWith(`message MessageRoot {
   string id = 1;
-  bytes f2 = 2;
+  Message2 f2 = 2;
+  message Message2 {
+    Message1 f1 = 1;
+      message Message1 {
+        uint32 f1 = 1;
+      }
+    repeated uint32 f2 = 2;
+  }
   int32 f3 = 3;
   int32 f4 = 4;
   string title = 5;
