@@ -103,7 +103,7 @@ If you already have some of your types defined in a proto file, or just find tha
 
 ```
 npm i -g protoc-gen-typemap
-cat data.in | protoc --typemap_out=MyMessage:generated mine.proto
+cat data.pb | protoc --typemap_out=MyMessage:generated mine.proto
 ```
 
 ## migration
