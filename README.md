@@ -97,6 +97,15 @@ Many things (ui, `toJS`, `toProto`, cli) use `queryMap` which is just a map of `
 
 You can use any types, from above, and set the name to whatever you want.
 
+## protoc
+
+If you already have some of your types defined in a proto file, or just find that easier to make proto in (it generally is much nicer) you can use [protoc-gen-typemap](https://github.com/konsumer/protoc-gen-typemap) to generate typemaps:
+
+```
+npm i -g protoc-gen-typemap
+cat data.in | protoc --typemap_out=generated --typemap_opt=MyMessage,4,1.2.4 mine.proto
+```
+
 ## migration
 
 I used to have the functionality of this lib split up into several other projects. Here is migration instructions, if you want to update to this one (recommended):
