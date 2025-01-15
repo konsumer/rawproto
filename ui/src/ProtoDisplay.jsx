@@ -77,6 +77,16 @@ export function ProtoField ({ field }) {
     )
   }
 
+  if (field.renderType === 'bool') {
+    return (
+      <div className='block'>
+        <span className={`mr-2 badge badge-${badgeColors[field.type]}`}>{field.name}</span>
+        <span className='mr-2 text-gray-500 italic'>{parseLabels[field.renderType]}</span>
+        <span>{field[field.renderType] ? 'True' : 'False'}</span>
+      </div>
+    )
+  }
+
   try {
     return (
       <div className='block'>

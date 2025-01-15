@@ -6,7 +6,7 @@ Guess structure of protobuf binary from raw data, query binary protobuf without 
 
 You can explore your proto binary data [here](https://konsumer.js.org/rawproto/). Use it to view, generate proto/json files, or select how to parse fields.
 
-If you are coming form an older version, or anothe rlibrary, check out [migration instructions](#migration).
+If you are coming form an older version, or another library, check out [migration instructions](#migration).
 
 
 ## installation
@@ -26,7 +26,7 @@ Install it in your path with `npm i -g rawproto` or use it 1-off with `npx rawpr
 
 ### code
 
-You can use it in code like this:
+You can use it, as a library, in code like this:
 
 ```js
 import { readFile } from 'fs/promises'
@@ -95,11 +95,15 @@ Many things (ui, `toJS`, `toProto`, cli) use `queryMap` which is just a map of `
 }
 ```
 
-You can use any types, from above, and set the name to whatever you want.
+You can use any types, from above, and set the name to whatever you want. Since it's flat, and JSON doesn;t allow multiple keys with same name, it might help to prefix it, like this:
 
-## protoc
+```
 
-If you already have some of your types defined in a proto file, or just find that easier to make proto in (it generally is much nicer) you can use [protoc-gen-typemap](https://github.com/konsumer/protoc-gen-typemap) to generate typemaps:
+```
+
+### protoc
+
+If you already have some of your types defined in a proto file, or just find that easier to make proto typemaps in (it generally is much nicer) you can use [protoc-gen-typemap](https://github.com/konsumer/protoc-gen-typemap) to generate typemaps:
 
 ```
 npm i -g protoc-gen-typemap
