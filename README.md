@@ -103,7 +103,7 @@ cat data.pb | protoc --typemap_out=MyMessage:generated mine.proto
 ```
 
 
-You can use partial defintiions to just get the part you want, but you have to make sure to drill all the way into the data, like:
+You can use partial definitions to just get the part you want, but you have to make sure to drill all the way into the data, like:
 
 ```proto
 # this is entrypoint for stuff we want: 1.2.4
