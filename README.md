@@ -84,22 +84,16 @@ Many things (ui, `toJS`, `toProto`, cli) use `queryMap` which is just a map of `
   "description": "1.2.4.7:string",
 
   "media": "1.2.4.10",
-  
-  "dimensions": "1.2.4.10.2",
-  "width": "1.2.4.10.2.3:uint",
-  "height": "1.2.4.10.2.4:uint",
-
-  "url": "1.2.4.10.5:string",
-  "type": "1.2.4.10.1:uint",
-  "bg": "1.2.4.10.15:string"
+  "media.dimensions": "1.2.4.10.2",
+  "media.dimensions.width": "1.2.4.10.2.3:uint",
+  "media.dimensions.height": "1.2.4.10.2.4:uint",
+  "media.url": "1.2.4.10.5:string",
+  "media.type": "1.2.4.10.1:uint",
+  "media.bg": "1.2.4.10.15:string"
 }
 ```
 
-You can use any types, from above, and set the name to whatever you want. Since it's flat, and JSON doesn;t allow multiple keys with same name, it might help to prefix it, like this:
-
-```
-
-```
+You can use any types, from above, and set the name to whatever you want. Since it's flat, and JSON doesn't allow multiple keys with same name, it helps to prefix it witht the path (like `media`, above.) When JSON/proto is generated, or it is viewed in web UI, it will only use the last segment, anyway.
 
 ### protoc
 
@@ -109,6 +103,56 @@ If you already have some of your types defined in a proto file, or just find tha
 npm i -g protoc-gen-typemap
 cat data.pb | protoc --typemap_out=MyMessage:generated mine.proto
 ```
+
+
+You can use partial defintiions to just get the part you want, but you have to make sure to drill all the way into the data, like:
+
+```proto
+# this is entrypoint for stuff we want: 1.2.4
+message Payload {
+  Message1 field1 = 1;
+  message Message1 {
+    Message2 field2 = 2;
+    message Mesage2 {
+      App field4 = 4;
+    }
+  }
+}
+
+# this is the actual data we care about
+message App {
+  string id = 1;
+  string title = 5;
+  string company = 6;
+  string description = 7;
+  repeated Media media = 10;
+}
+
+message Media {
+  int type = 1;
+  Dimensions dimensions = 2;
+  string url = 5;
+  string bg = 15;
+}
+
+message Dimensions {
+  int width = 3;
+  int height = 4;
+}
+```
+
+Then you would use it like this to generate a typemap:
+
+```
+cat data.pb | protoc --typemap_out=Payload:generated app.proto
+```
+
+And you can also just decode, directly:
+
+```
+cat data.pb | protoc --decode=Payload app.proto
+```
+
 
 ## migration
 
