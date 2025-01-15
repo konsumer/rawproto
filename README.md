@@ -15,8 +15,6 @@ If you are coming form an older version, or another library, check out [migratio
 
 You can also use `npx rawproto` to run the CLI.
 
-If you just want the CLI, and don't use node, you can also find standalone builds [here](https://github.com/konsumer/rawproto/releases).
-
 ## usage
 
 ### CLI
@@ -70,11 +68,11 @@ FIXED32 - int, uint, bytes, float, string
 - You can use any [protobuf scalar type-name](https://protobuf.dev/programming-guides/proto3/#scalar).
 - You can use `raw` for any type to get the raw field with bytes + meta.
 - Groups are treated as repeated `LEN` message-fields
-- `LEN` will try to be parsed as sub-tree, but you can override with other types in `query` (for example if it tries to make a sub-message with part of a string)
+- `LEN` will try to be parsed as sub-tree, but you can override with other types in `query` or with a typemap (for example if it tries to make a sub-message with part of a string)
 
 ## query-map
 
-Many things (ui, `toJS`, `toProto`, cli) use `queryMap` which is just a map of `name` to `path:type`. Here is one that works well with [hearthstone test data](https://github.com/konsumer/rawproto/raw/master/test/hearthstone.bin):
+Many things (ui, `toJS`, `toProto`, cli) use `queryMap` which is just a map of `name` to `path:type`. Here is one that works well with [hearthstone test data](test/hearthstone.bin):
 
 ```json
 {
@@ -93,11 +91,11 @@ Many things (ui, `toJS`, `toProto`, cli) use `queryMap` which is just a map of `
 }
 ```
 
-You can use any types, from above, and set the name to whatever you want. Since it's flat, and JSON doesn't allow multiple keys with same name, it helps to prefix it witht the path (like `media`, above.) When JSON/proto is generated, or it is viewed in web UI, it will only use the last segment, anyway.
+You can use any types, from above, and set the name to whatever you want. Since it's flat, and JSON doesn't allow multiple keys with same name, it helps to prefix it with the path (like `media`, above.) When JSON/proto is generated, or it is viewed in web UI, it will only use the last segment, anyway.
 
 ### protoc
 
-If you already have some of your types defined in a proto file, or just find that easier to make proto typemaps in (it generally is much nicer) you can use [protoc-gen-typemap](https://github.com/konsumer/protoc-gen-typemap) to generate typemaps:
+If you already have some of your types defined in a proto file, or just find that easier to make proto typemaps in (it generally is much nicer, and there is more tooling available) you can use [protoc-gen-typemap](https://github.com/konsumer/protoc-gen-typemap) to generate typemaps:
 
 ```
 npm i -g protoc-gen-typemap
