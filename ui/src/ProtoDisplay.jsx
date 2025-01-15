@@ -29,11 +29,14 @@ export default function ProtoDisplay ({ open = false, tree, typeMap = {}, nameMa
   if (tree) {
     tree.renderType = 'sub'
   }
+
+  const fieldName = (tree.name||'').split('.').pop()
+
   return tree
     ? (
       <details className={className} open={open}>
         <summary>
-          <div className={`badge badge-${badgeColors[tree.type]} gap-2`}>{tree.name || 'root (0)'}</div>
+          <div className={`badge badge-${badgeColors[tree.type]} gap-2`}>{fieldName || 'root (0)'}</div>
           <p className='text-gray-500 italic'>{parseLabels[tree.renderType]}</p>
         </summary>
         <ul>
@@ -67,10 +70,11 @@ export default function ProtoDisplay ({ open = false, tree, typeMap = {}, nameMa
 }
 
 export function ProtoField ({ field }) {
+  const fieldName = (field.name||'').split('.').pop()
   if (field.renderType === 'bytes') {
     return (
       <div className='block'>
-        <span className={`mr-2 badge badge-${badgeColors[field.type]}`}>{field.name}</span>
+        <span className={`mr-2 badge badge-${badgeColors[field.type]}`}>{fieldName}</span>
         <span className='mr-2 text-gray-500 italic'>{parseLabels[field.renderType]}</span>
         <span>{hex(field.bytes)}</span>
       </div>
@@ -80,7 +84,7 @@ export function ProtoField ({ field }) {
   if (field.renderType === 'bool') {
     return (
       <div className='block'>
-        <span className={`mr-2 badge badge-${badgeColors[field.type]}`}>{field.name}</span>
+        <span className={`mr-2 badge badge-${badgeColors[field.type]}`}>{fieldName}</span>
         <span className='mr-2 text-gray-500 italic'>{parseLabels[field.renderType]}</span>
         <span>{field[field.renderType] ? 'True' : 'False'}</span>
       </div>
@@ -90,7 +94,7 @@ export function ProtoField ({ field }) {
   try {
     return (
       <div className='block'>
-        <span className={`mr-2 badge badge-${badgeColors[field.type]}`}>{field.name}</span>
+        <span className={`mr-2 badge badge-${badgeColors[field.type]}`}>{fieldName}</span>
         <span className='mr-2 text-gray-500 italic'>{parseLabels[field.renderType]}</span>
         <span>{field[field.renderType]}</span>
       </div>
@@ -99,7 +103,7 @@ export function ProtoField ({ field }) {
     // sometimes parsing as renderType fails
     return (
       <div className='block'>
-        <span className={`bmr-2 adge badge-${badgeColors[field.type]}`}>{field.name}</span>
+        <span className={`bmr-2 adge badge-${badgeColors[field.type]}`}>{fieldName}</span>
         <span className='mr-2 text-gray-500 italic'>{parseLabels[field.renderType]}</span>
       </div>
     )
